@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:import": "node scripts/repro-import.mjs",
+    "test:roundtrip": "node scripts/roundtrip.mjs",
+    "test:editor": "node scripts/test-editor-caret.mjs"
   },
   "dependencies": {
     "@google/genai": "latest",
@@ -31,6 +34,9 @@
   "devDependencies": {
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "esbuild": "^0.28.2",
+    "jsdom": "^30.1.2",
+    "playwright-core": "^1.64.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }
