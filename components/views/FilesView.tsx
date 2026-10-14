@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { Settings2, Library, BookOpen, FileType, Cloud, X, ChevronUp, ChevronDown, FileCode } from 'lucide-react';
-import { Chapter, ProjectData, ImageAsset, ExtraFile, Metadata } from '../../types';
-import { parseTxtToChapters } from '../../services/parser/text';
-import { parseEpub } from '../../services/epub/importer';
-import { parseHtmlToChapters } from '../../services/parser/html';
+import { Chapter, ProjectData } from '../../types';
+import { mergeProjects, parseFileToProject } from '../../services/importFile';
 import { dialog } from '../../services/dialog';
 
 interface FilesViewProps {
@@ -15,14 +13,6 @@ interface FilesViewProps {
 
 type DragZoneType = 'txt' | 'epub' | 'html' | 'batch' | null;
 
-const escapeHtml = (value: string) =>
-    value
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-
 const FilesView: React.FC<FilesViewProps> = ({ onProjectUpdate, onChaptersLoaded, onLoadingStart, onLoadingEnd }) => {
     const [splitRegex, setSplitRegex] = useState<string>("^\\s*(Chapter\\s+\\d+|第[0-9一二三四五六七八九十百千]+[章回节]|序章|尾声|引子|[（(][0-9一二三四五六七八九十百千]+[)）])");
     const [cleanHtml, setCleanHtml] = useState(true);
@@ -33,58 +23,47 @@ const FilesView: React.FC<FilesViewProps> = ({ onProjectUpdate, onChaptersLoaded
     const [primaryFileIndex, setPrimaryFileIndex] = useState<number>(0);
     const [showBatchModal, setShowBatchModal] = useState<boolean>(false);
 
-    // --- Processing Logic (Extracted for reuse) ---
+    // --- Processing Logic ---
+    // 解析统一走 services/importFile，与「书籍管理 → 导入新书」共用同一套逻辑，
+    // 避免同一个文件在两个入口导入出不同结果。
+
+    /**
+     * 把解析结果覆盖到当前书籍。
+     *
+     * 这里是「替换当前书内容」的语义（不是新建一本书）：
+     * 解析出的完整数据整体覆盖，并清掉自定义目录 —— 目录是跟着章节走的，
+     * 章节都换了，旧的目录内容不应残留。
+     */
+    const applyImportedProject = (project: ProjectData, firstChapterId?: string) => {
+        onProjectUpdate({ ...project, customTocTitle: undefined, customTocXhtml: undefined });
+        if (firstChapterId && project.chapters?.length) {
+            onChaptersLoaded(project.chapters, firstChapterId);
+        }
+    };
+
+    const processSingleFile = async (file: File) => {
+        onLoadingStart(`正在解析 ${file.name}...`);
+        try {
+            const { project } = await parseFileToProject(file, {
+                cleanHtml,
+                removeImages,
+                splitRegex,
+            });
+            applyImportedProject(project, project.chapters?.[0]?.id);
+        } catch (error) {
+            console.error('导入失败', error);
+            await dialog.alert(error instanceof Error ? error.message : '文件解析失败');
+        } finally {
+            onLoadingEnd();
+        }
+    };
 
     const processTxtFile = async (file: File) => {
         if (!file.name.toLowerCase().endsWith('.txt')) {
             await dialog.alert('请上传 .txt 格式的文件');
             return;
         }
-        onLoadingStart('正在解析 TXT 文件...');
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            try {
-                const text = event.target?.result as string;
-                const parsedChapters = parseTxtToChapters(text, splitRegex);
-                const newChapters: Chapter[] = parsedChapters.map((c, i) => ({
-                    id: Date.now().toString() + i,
-                    title: c.title,
-                    content: c.content,
-                    level: c.level,
-                    subItems: []
-                }));
-
-                onProjectUpdate({
-                    metadata: {
-                        title: file.name.replace(/\.txt$/i, ''),
-                        creator: '未知作者',
-                        language: 'zh',
-                        description: '',
-                        publisher: '',
-                        date: new Date().toISOString().split('T')[0],
-                        series: '',
-                        subjects: []
-                    },
-                    chapters: newChapters,
-                    images: [],
-                    cover: null,
-                    customCSS: '',
-                    customTocTitle: undefined,
-                    customTocXhtml: undefined
-                });
-
-                if (newChapters.length > 0) {
-                    onChaptersLoaded(newChapters, newChapters[0].id);
-                }
-            } catch (error) {
-                console.error(error);
-                dialog.alert('TXT 解析失败');
-            } finally {
-                onLoadingEnd();
-            }
-        };
-        reader.onerror = () => onLoadingEnd();
-        reader.readAsText(file);
+        await processSingleFile(file);
     };
 
     const processEpubFile = async (file: File) => {
@@ -92,26 +71,7 @@ const FilesView: React.FC<FilesViewProps> = ({ onProjectUpdate, onChaptersLoaded
             await dialog.alert('请上传 .epub 格式的文件');
             return;
         }
-        onLoadingStart('正在解析 EPUB 文件...');
-        // Delay slightly to ensure UI renders the loading state
-        await new Promise(resolve => setTimeout(resolve, 50));
-        try {
-            const importedProject = await parseEpub(file, {
-                imageStartId: 1,
-                cleanHtml,
-                removeImages
-            });
-            onProjectUpdate({ ...importedProject, customTocTitle: undefined, customTocXhtml: undefined });
-
-            if (importedProject.chapters && importedProject.chapters.length > 0) {
-                onChaptersLoaded(importedProject.chapters, importedProject.chapters[0].id);
-            }
-        } catch (error) {
-            console.error("Failed to parse EPUB:", error);
-            await dialog.alert(`EPUB 解析失败: ${error instanceof Error ? error.message : String(error)}`);
-        } finally {
-            onLoadingEnd();
-        }
+        await processSingleFile(file);
     };
 
     const processHtmlFile = async (file: File) => {
@@ -119,44 +79,7 @@ const FilesView: React.FC<FilesViewProps> = ({ onProjectUpdate, onChaptersLoaded
             await dialog.alert('请上传 .html 或 .htm 格式的文件');
             return;
         }
-        onLoadingStart('正在解析 HTML 文件...');
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            try {
-                const htmlContent = event.target?.result as string;
-                const parsedChapters = parseHtmlToChapters(htmlContent);
-
-                onProjectUpdate({
-                    metadata: {
-                        title: file.name.replace(/\.(html|htm)$/i, ''),
-                        creator: '未知作者',
-                        language: 'zh',
-                        description: '',
-                        publisher: '',
-                        date: new Date().toISOString().split('T')[0],
-                        series: '',
-                        subjects: []
-                    },
-                    chapters: parsedChapters,
-                    images: [],
-                    cover: null,
-                    customCSS: '',
-                    customTocTitle: undefined,
-                    customTocXhtml: undefined
-                });
-
-                if (parsedChapters.length > 0) {
-                    onChaptersLoaded(parsedChapters, parsedChapters[0].id);
-                }
-            } catch (error) {
-                console.error(error);
-                dialog.alert('HTML 解析失败');
-            } finally {
-                onLoadingEnd();
-            }
-        };
-        reader.onerror = () => onLoadingEnd();
-        reader.readAsText(file);
+        await processSingleFile(file);
     };
 
     const handleShowBatchOptions = async (files: FileList | File[]) => {
@@ -200,86 +123,33 @@ const FilesView: React.FC<FilesViewProps> = ({ onProjectUpdate, onChaptersLoaded
         onLoadingStart(`准备合并 ${fileList.length} 本书籍...`);
 
         try {
-            let mergedChapters: Chapter[] = [];
-            let mergedImages: ImageAsset[] = [];
-            let mergedExtraFiles: ExtraFile[] = [];
-            let mergedCustomCSS = '';
-            let primaryMetadata: Metadata | null = null;
-            let primaryCover: string | null = null;
-            let globalImageCount = 0;
-            const shouldGroupBooks = fileList.length > 1;
+            // 逐本解析成完整 ProjectData，再由 mergeProjects 统一合并：
+            // 图片续号与正文里 data-id 的同步重写都在那里，各写一份极易漏改。
+            const entries: Array<{ project: ProjectData; label: string }> = [];
 
             for (let i = 0; i < fileList.length; i++) {
                 onLoadingStart(`正在合并第 ${i + 1}/${fileList.length} 本书: ${fileList[i].name}`);
-                // Yield to UI thread
-                await new Promise(resolve => setTimeout(resolve, 10));
+                // 让出主线程，保证进度提示能刷新
+                await new Promise((resolve) => setTimeout(resolve, 10));
 
                 const file = fileList[i];
-                const result = await parseEpub(file, {
-                    imageStartId: globalImageCount + 1,
-                    cleanHtml,
-                    removeImages
-                });
-
-                const bookTitle = result.metadata?.title?.trim() || file.name.replace(/\.epub$/i, '');
-                const bookSectionId = `${Date.now().toString(36)}_${i}_section`;
-                const bookChapters = (result.chapters || []).map((chapter) => ({
-                    ...chapter,
-                    level: 2 as const,
-                    excludeFromToc: chapter.excludeFromToc,
-                }));
-
-                if (bookChapters.length > 0 && shouldGroupBooks) {
-                    mergedChapters = [
-                        ...mergedChapters,
-                        {
-                            id: bookSectionId,
-                            title: bookTitle,
-                            content: `<h1>${escapeHtml(bookTitle)}</h1>`,
-                            level: 1,
-                            subItems: [],
-                        },
-                        ...bookChapters,
-                    ];
-                } else if (bookChapters.length > 0) {
-                    mergedChapters = [...mergedChapters, ...bookChapters];
-                }
-                if (result.images) {
-                    mergedImages = [...mergedImages, ...result.images];
-                    globalImageCount += result.images.length;
-                }
-                if (result.extraFiles) mergedExtraFiles = [...mergedExtraFiles, ...result.extraFiles];
-                if (result.customCSS) mergedCustomCSS += `\n/* From ${file.name} */\n` + result.customCSS;
-
-                if (i === primaryIndex) {
-                    if (result.metadata) primaryMetadata = result.metadata;
-                    if (result.cover) primaryCover = result.cover;
-                }
+                const { project } = await parseFileToProject(file, { cleanHtml, removeImages });
+                entries.push({ project, label: file.name });
             }
 
-            onProjectUpdate({
-                metadata: primaryMetadata || {
-                    title: '合并书籍合集',
-                    creator: '多位作者',
-                    language: 'zh',
-                    description: '由多个 EPUB 文件合并而成。',
-                    publisher: '',
-                    date: new Date().toISOString().split('T')[0],
-                    series: '',
-                    subjects: ['合集']
+            const merged = mergeProjects(entries, primaryIndex);
+            const primaryTitle = entries[primaryIndex]?.project.metadata?.title?.trim();
+
+            applyImportedProject(
+                {
+                    ...merged,
+                    customTocTitle: fileList.length > 1 ? '目录' : undefined,
+                    metadata: entries.length > 1 && !primaryTitle
+                        ? { ...merged.metadata, title: '合并书籍合集' }
+                        : merged.metadata,
                 },
-                chapters: mergedChapters,
-                images: mergedImages,
-                extraFiles: mergedExtraFiles,
-                cover: primaryCover,
-                customCSS: mergedCustomCSS,
-                customTocTitle: shouldGroupBooks ? '目录' : undefined,
-                customTocXhtml: undefined
-            });
-
-            if (mergedChapters.length > 0) {
-                onChaptersLoaded(mergedChapters, mergedChapters[0].id);
-            }
+                merged.chapters?.[0]?.id,
+            );
         } catch (error) {
             console.error("Batch merge failed:", error);
             await dialog.alert(`批量合并失败: ${error instanceof Error ? error.message : String(error)}`);
