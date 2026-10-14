@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ProjectData, CoverDesign, Chapter, TocItem } from '../types';
 import localforage from 'localforage';
+import { getResumeChapterId, markChapterAsCurrent } from '../utils/readingPosition';
 
 const STORAGE_KEY = 'epub_maker_project_v1';
 
@@ -98,7 +99,12 @@ export const useProject = () => {
                         }
                     });
                     if (savedData.chapters && savedData.chapters.length > 0) {
-                        setActiveChapterId(savedData.chapters[0].id);
+                        // 开启「记忆阅读位置」时回到上次编辑的那一章，否则沿用「打开第一章」
+                        const chapterIds = new Set(savedData.chapters.map((c: Chapter) => c.id));
+                        const resumeId = getResumeChapterId();
+                        setActiveChapterId(
+                            resumeId && chapterIds.has(resumeId) ? resumeId : savedData.chapters[0].id,
+                        );
                     }
                 }
             } catch (e) {
@@ -210,12 +216,22 @@ export const useProject = () => {
 
     const activeChapter = project.chapters.find(c => c.id === activeChapterId);
 
+    /**
+     * 切换当前章节。
+     * 开启记忆功能时顺手记录「最近查看的章节」，这样即使用户只是打开某章
+     * 浏览、没有滚动或编辑，刷新后也能回到这一章。
+     */
+    const selectChapter = (id: string | null) => {
+        setActiveChapterId(id);
+        if (id) markChapterAsCurrent(id);
+    };
+
     return {
         project,
         activeChapterId,
         activeChapter,
         isLoaded,
-        setActiveChapterId,
+        setActiveChapterId: selectChapter,
         updateProject,
         updateChapters,
         updateChapterContent,
