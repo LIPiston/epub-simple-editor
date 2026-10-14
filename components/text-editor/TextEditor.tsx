@@ -37,6 +37,7 @@ import { useEditorContent } from './useEditorContent';
 import { useEditorSearch } from './useEditorSearch';
 import { useImageUpload } from '../../hooks/useImageUpload';
 import { useEditorSettings } from '../../hooks/useEditorSettings';
+import { useReadingMemory } from '../../hooks/useReadingMemory';
 import { buildScopedCSS } from '../../utils/cssScoper';
 import { PRESET_STYLES } from '../../themes';
 
@@ -54,6 +55,8 @@ interface TextEditorProps {
   } | null;
   onMobileBack?: () => void;
   activeChapter?: { title: string };
+  /** 当前章节 id，用于记忆阅读位置 */
+  chapterId: string;
 }
 
 const TextEditor: React.FC<TextEditorProps> = ({
@@ -65,14 +68,20 @@ const TextEditor: React.FC<TextEditorProps> = ({
   focusRequest,
   activeChapter,
   onMobileBack,
+  chapterId,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  // 卸载时 scrollRef.current 可能已被 React 置空，需单独留一份用于收尾落盘
+  const lastScrollElRef = useRef<HTMLDivElement | null>(null);
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [stats, setStats] = useState({ chars: 0, time: 0 });
 
   // ─── 编辑器设置（字体大小等）───
   const editorSettings = useEditorSettings();
+
+  // ─── 阅读位置记忆（可选功能）───
+  const readingMemory = useReadingMemory();
 
   // ─── 图片上传 Hook ───
   const imageUpload = useImageUpload({
@@ -145,6 +154,82 @@ const TextEditor: React.FC<TextEditorProps> = ({
       editor.commands.setContent(newHTML, { emitUpdate: false });
     }
   }, [editor, content, project.images]);
+
+  // ─── 阅读位置记忆：恢复与保存 ───
+  // 组件以 key={chapterId} 挂载，因此每个章节实例只处理自己那一章的位置。
+  const { rememberPosition, flushPosition, restorePosition, restoringRef } = readingMemory;
+  const userScrolledRef = useRef(false);
+  const editorRef = useRef(editor);
+  editorRef.current = editor;
+
+  // 恢复：内容布局（字体、图片）是异步完成的，先在第一帧后恢复一次，
+  // 再在稍后校正一次 —— 期间若用户已自行滚动则不再打扰他。
+  useEffect(() => {
+    if (!editor || !readingMemory.enabled) return;
+
+    let cancelled = false;
+    let secondPass: ReturnType<typeof setTimeout> | null = null;
+
+    const run = () => restorePosition(chapterId, scrollRef.current, editor);
+
+    const raf1 = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (cancelled || userScrolledRef.current) return;
+        run();
+        // 图片解码 / 字体加载可能改变内容高度，迟一点再校正一次
+        secondPass = setTimeout(() => {
+          if (cancelled || userScrolledRef.current) return;
+          run();
+        }, 450);
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf1);
+      if (secondPass) clearTimeout(secondPass);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor, chapterId, readingMemory.enabled]);
+
+  // 保存：滚动时防抖记录（rememberPosition 内部已防抖）
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !readingMemory.enabled) return;
+    lastScrollElRef.current = el;
+
+    const handleScroll = () => {
+      // 程序化恢复也会触发 scroll，此时不能当成用户操作
+      if (restoringRef.current) return;
+      userScrolledRef.current = true;
+      rememberPosition(chapterId, el, editorRef.current);
+    };
+
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, [chapterId, readingMemory.enabled, rememberPosition, restoringRef]);
+
+  // 保存：光标移动 / 内容编辑时记录，保证「编辑到哪」也被记住
+  useEffect(() => {
+    if (!editor || !readingMemory.enabled) return;
+
+    const handleSelectionUpdate = () => {
+      rememberPosition(chapterId, lastScrollElRef.current ?? scrollRef.current, editorRef.current);
+    };
+
+    editor.on('selectionUpdate', handleSelectionUpdate);
+    return () => {
+      editor.off('selectionUpdate', handleSelectionUpdate);
+    };
+  }, [editor, chapterId, readingMemory.enabled, rememberPosition]);
+
+  // 保存：切换章节 / 刷新前，立刻落盘（此时防抖定时器可能还没触发）
+  useEffect(() => {
+    if (!readingMemory.enabled) return;
+    return () => {
+      flushPosition(chapterId, lastScrollElRef.current ?? scrollRef.current, editorRef.current);
+    };
+  }, [chapterId, readingMemory.enabled, flushPosition]);
 
   // ─── 搜索 Hook ───
   const search = useEditorSearch(editor, scrollRef);
@@ -422,6 +507,8 @@ const TextEditor: React.FC<TextEditorProps> = ({
         onDecreaseFontSize={editorSettings.decreaseFontSize}
         canIncrease={editorSettings.fontSize !== 'large'}
         canDecrease={editorSettings.fontSize !== 'small'}
+        readingMemoryEnabled={readingMemory.enabled}
+        onToggleReadingMemory={readingMemory.toggleEnabled}
       />
 
       {/* 图片选择弹窗 */}

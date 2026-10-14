@@ -112,9 +112,10 @@ const ChaptersView: React.FC<{
 
       {/* 编辑器区域 */}
       <div className={`${!activeChapterId ? 'hidden md:flex' : 'flex'} flex-1 h-full flex-col min-w-0`}>
-        {activeChapter ? (
+        {activeChapter && activeChapterId ? (
           <TextEditor
             key={activeChapterId}
+            chapterId={activeChapterId}
             content={activeChapter.content}
             onContentChange={onUpdateChapterContent}
             onSplitChapter={onSplitChapter}
