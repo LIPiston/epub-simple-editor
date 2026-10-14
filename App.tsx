@@ -159,7 +159,11 @@ const App: React.FC = () => {
 
         <button
           onClick={toggleAutoSave}
-          className="absolute bottom-4 right-4 z-50 transition-transform active:scale-95 focus:outline-none"
+          className={`absolute right-4 z-50 transition-transform active:scale-95 focus:outline-none ${
+            // 编辑器视图底部有 40px 高的状态栏（EditorStatusBar），胶囊需上移让开它，
+            // 否则会盖住状态栏上的「记忆位置」开关和字体控件。
+            currentView === 'chapters' && activeChapter ? 'bottom-14' : 'bottom-4'
+          }`}
           title={autoSaveEnabled ? '点击关闭自动保存' : '点击开启自动保存'}
         >
           {!autoSaveEnabled ? (
