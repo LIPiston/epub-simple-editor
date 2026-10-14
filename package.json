@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "test:import": "node scripts/repro-import.mjs",
     "test:roundtrip": "node scripts/roundtrip.mjs",
-    "test:editor": "node scripts/test-editor-caret.mjs"
+    "test:editor": "node scripts/test-editor-caret.mjs",
+    "test:reading": "node scripts/test-reading-position.mjs",
+    "test:pill": "node scripts/test-autosave-pill.mjs"
   },
   "dependencies": {
     "@google/genai": "latest",
