@@ -39,6 +39,53 @@ const clampDocPosition = (editor: Editor, pos: number): number => {
   return Math.max(0, Math.min(pos, max));
 };
 
+/** 判断光标是否算「在视口内」时留的余量，避免贴着边缘被行高误判 */
+const CARET_VISIBLE_MARGIN = 8;
+
+/**
+ * 决定恢复时光标该落在哪。
+ *
+ * 阅读时「光标位置」与「视口位置」常常是分开的：在某处落笔之后往下滚着读，
+ * 光标会留在视口之外。若把它原样恢复，第一次 focus()（工具栏按钮都走 focus()，
+ * 默认 scrollIntoView:true）就会把视口拽到光标处；而这次跳动又会被滚动监听
+ * 当成用户滚动写回记录 —— 阅读位置就此被污染。真实场景里表现为「打开时位置对，
+ * 一动就跳到上次的光标那儿，并且从此记住的是那个被带跑的位置」。
+ *
+ * 因此只恢复确实落在视口内的光标；不在视口内就落到视口顶部第一行，
+ * 让光标与视口保持一致：聚焦不再带动视口，接着打字也发生在你正看着的地方。
+ */
+const resolveVisibleCaret = (
+  editor: Editor,
+  scrollEl: HTMLElement,
+  caretFrom: number,
+): number | null => {
+  const target = clampDocPosition(editor, caretFrom);
+  const viewport = scrollEl.getBoundingClientRect();
+
+  let caretRect: { top: number; bottom: number } | null = null;
+  try {
+    caretRect = editor.view.coordsAtPos(target);
+  } catch {
+    // 位置失效（内容被大改）：当作不在视口内，走下面的兜底
+  }
+
+  if (
+    caretRect &&
+    caretRect.top >= viewport.top + CARET_VISIBLE_MARGIN &&
+    caretRect.bottom <= viewport.bottom - CARET_VISIBLE_MARGIN
+  ) {
+    return target;
+  }
+
+  // 不在视口内：反查视口顶部第一行对应的文档位置
+  const probe = editor.view.posAtCoords({
+    left: viewport.left + viewport.width / 2,
+    top: viewport.top + CARET_VISIBLE_MARGIN,
+  });
+
+  return probe && Number.isFinite(probe.pos) ? probe.pos : null;
+};
+
 /** 记录待落盘的快照：数据独立于 DOM，元素卸载后依然有效 */
 interface PendingPosition {
   chapterId: string;
@@ -203,11 +250,17 @@ export function useReadingMemory(bookId: string): UseReadingMemoryReturn {
 
       // 恢复光标位置，但不聚焦 —— 避免页面一打开就弹出「看不见的光标」
       // （参考提交 c34a358 的同款处理）。用户点击编辑器时光标已在正确位置。
+      //
+      // 只恢复落在视口内的光标：阅读位置与光标常常分离，把远处的光标原样
+      // 恢复会让随后的 focus() 把视口拽过去（详见 resolveVisibleCaret）。
       if (editor && !editor.isDestroyed && saved.caretFrom !== null) {
-        try {
-          editor.commands.setTextSelection(clampDocPosition(editor, saved.caretFrom));
-        } catch {
-          // 内容变化导致位置失效时忽略，保持默认光标位置
+        const caret = resolveVisibleCaret(editor, scrollEl, saved.caretFrom);
+        if (caret !== null) {
+          try {
+            editor.commands.setTextSelection(caret);
+          } catch {
+            // 内容变化导致位置失效时忽略，保持默认光标位置
+          }
         }
       }
 
