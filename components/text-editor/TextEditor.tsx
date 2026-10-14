@@ -57,6 +57,8 @@ interface TextEditorProps {
   activeChapter?: { title: string };
   /** 当前章节 id，用于记忆阅读位置 */
   chapterId: string;
+  /** 当前书籍 id（位置按书籍隔离，见 useReadingMemory） */
+  bookId: string;
 }
 
 const TextEditor: React.FC<TextEditorProps> = ({
@@ -69,6 +71,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
   activeChapter,
   onMobileBack,
   chapterId,
+  bookId,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -81,7 +84,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
   const editorSettings = useEditorSettings();
 
   // ─── 阅读位置记忆（可选功能）───
-  const readingMemory = useReadingMemory();
+  const readingMemory = useReadingMemory(bookId);
 
   // ─── 图片上传 Hook ───
   const imageUpload = useImageUpload({

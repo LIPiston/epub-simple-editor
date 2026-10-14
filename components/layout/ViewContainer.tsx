@@ -8,12 +8,16 @@ import MetadataView from '../views/MetadataView';
 import StylesView from '../views/StylesView';
 import ImagesView from '../views/ImagesView';
 import StructureView from '../views/StructureView';
+import LibraryView from '../views/LibraryView';
+import { LibraryBook } from '../../utils/bookLibrary';
 import { BookOpen, GripVertical } from 'lucide-react';
 import { useResizableSidebar } from '../../hooks/useResizableSidebar';
 
 interface ViewContainerProps {
   currentView: ViewMode;
   project: ProjectData;
+  /** 当前书籍 id（阅读位置按书籍隔离） */
+  bookId: string | null;
   activeChapterId: string | null;
   activeChapter: Chapter | undefined;
   editorFocusRequest: {
@@ -35,6 +39,15 @@ interface ViewContainerProps {
   onLoadingStart: (msg: string) => void;
   onLoadingEnd: () => void;
   onMobileBack: () => void;
+  // 书库（书籍管理视图）
+  libraryBooks: LibraryBook[];
+  activeBookId: string | null;
+  onOpenBook: (bookId: string) => void | Promise<void>;
+  onCreateBook: () => void | Promise<void>;
+  onImportFiles: (files: File[]) => void | Promise<void>;
+  onDuplicateBook: (bookId: string) => void | Promise<void>;
+  onRenameBook: (bookId: string, title: string) => void | Promise<void>;
+  onDeleteBook: (bookId: string) => void | Promise<void>;
 }
 
 /**
@@ -42,6 +55,7 @@ interface ViewContainerProps {
  */
 const ChaptersView: React.FC<{
   project: ProjectData;
+  bookId: string | null;
   activeChapterId: string | null;
   activeChapter: Chapter | undefined;
   editorFocusRequest: ViewContainerProps['editorFocusRequest'];
@@ -55,6 +69,7 @@ const ChaptersView: React.FC<{
   onMobileBack: ViewContainerProps['onMobileBack'];
 }> = ({
   project,
+  bookId,
   activeChapterId,
   activeChapter,
   editorFocusRequest,
@@ -112,10 +127,11 @@ const ChaptersView: React.FC<{
 
       {/* 编辑器区域 */}
       <div className={`${!activeChapterId ? 'hidden md:flex' : 'flex'} flex-1 h-full flex-col min-w-0`}>
-        {activeChapter && activeChapterId ? (
+        {activeChapter && activeChapterId && bookId ? (
           <TextEditor
             key={activeChapterId}
             chapterId={activeChapterId}
+            bookId={bookId}
             content={activeChapter.content}
             onContentChange={onUpdateChapterContent}
             onSplitChapter={onSplitChapter}
@@ -139,6 +155,7 @@ const ChaptersView: React.FC<{
 const ViewContainer: React.FC<ViewContainerProps> = ({
   currentView,
   project,
+  bookId,
   activeChapterId,
   activeChapter,
   editorFocusRequest,
@@ -153,9 +170,28 @@ const ViewContainer: React.FC<ViewContainerProps> = ({
   onChaptersLoaded,
   onLoadingStart,
   onLoadingEnd,
-  onMobileBack
+  onMobileBack,
+  libraryBooks,
+  activeBookId,
+  onOpenBook,
+  onCreateBook,
+  onImportFiles,
+  onDuplicateBook,
+  onRenameBook,
+  onDeleteBook,
 }) => {
   switch (currentView) {
+    case 'library':
+      return <LibraryView
+        books={libraryBooks}
+        activeBookId={activeBookId}
+        onOpenBook={onOpenBook}
+        onCreateBook={onCreateBook}
+        onImportFiles={onImportFiles}
+        onDuplicateBook={onDuplicateBook}
+        onRenameBook={onRenameBook}
+        onDeleteBook={onDeleteBook}
+      />;
     case 'files':
       return <FilesView
         onProjectUpdate={onUpdateProject}
@@ -166,6 +202,7 @@ const ViewContainer: React.FC<ViewContainerProps> = ({
     case 'chapters':
       return <ChaptersView
         project={project}
+        bookId={bookId}
         activeChapterId={activeChapterId}
         activeChapter={activeChapter}
         editorFocusRequest={editorFocusRequest}
