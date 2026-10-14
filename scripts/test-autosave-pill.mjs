@@ -46,7 +46,8 @@ window.__seed = async () => {
 window.__mount = () => {
   const host = document.getElementById('root');
   host.innerHTML = '';
-  createRoot(host).render(<App />);
+  // 与真实入口 index.tsx 一致：包 StrictMode，避免只在非 StrictMode 下才成立的假象
+  createRoot(host).render(<React.StrictMode><App /></React.StrictMode>);
 };
 `;
 

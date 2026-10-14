@@ -83,17 +83,23 @@ window.__mountEditor = (chapterId, onUpdateProject) => {
   host.appendChild(div);
 
   rootA = createRoot(div);
+  // 必须包 StrictMode：真实入口 index.tsx 就是这么渲染的，而它会在挂载后
+  // 立刻跑一遍 effect 的清理函数（模拟卸载）。阅读位置的「卸载收尾落盘」
+  // 曾因此在首帧前把真实位置覆盖成 0（切章 / 刷新后总是从头开始），
+  // 而不带 StrictMode 的测试环境复现不出来 —— 这里保持与生产一致。
   const App = () => (
-    <TextEditor
-      chapterId={chapterId}
-      bookId={TEST_BOOK_ID}
-      content={PARAGRAPHS}
-      onContentChange={() => {}}
-      onSplitChapter={() => {}}
-      project={project([{ id: chapterId, title: '测试章节', content: PARAGRAPHS, level: 1, subItems: [] }])}
-      onUpdateProject={onUpdateProject || (() => {})}
-      activeChapter={{ title: '测试章节' }}
-    />
+    <React.StrictMode>
+      <TextEditor
+        chapterId={chapterId}
+        bookId={TEST_BOOK_ID}
+        content={PARAGRAPHS}
+        onContentChange={() => {}}
+        onSplitChapter={() => {}}
+        project={project([{ id: chapterId, title: '测试章节', content: PARAGRAPHS, level: 1, subItems: [] }])}
+        onUpdateProject={onUpdateProject || (() => {})}
+        activeChapter={{ title: '测试章节' }}
+      />
+    </React.StrictMode>
   );
   rootA.render(<App />);
 };
@@ -317,6 +323,17 @@ console.log('A. 章节内滚动位置的保存与恢复');
     '重新挂载后恢复到上次滚动位置',
     Math.abs(restored - 1200) < 2,
     `  恢复 scrollTop=${restored}（期望 ≈1200，容差 2px）`,
+  );
+
+  // 直接盯住机制：挂载瞬间不能把记录覆盖掉。
+  // StrictMode 会在挂载后立刻执行一次 effect 清理（模拟卸载），那一刻正文
+  // 尚未排版，scrollHeight 是假值；若清理逻辑照着它写盘，记录就会变成
+  // scrollTop=0，紧接着的恢复只能读回 0（即「切章/刷新后总是从头开始」）。
+  const recAfterRemount = (await readReadingState())?.books?.[TEST_BOOK_ID]?.positions?.ch1;
+  record(
+    '重新挂载不会把记录覆盖成 0（StrictMode 挂载清理）',
+    !!recAfterRemount && Math.abs(recAfterRemount.scrollTop - 1200) < 2,
+    `  挂载后记录 scrollTop=${recAfterRemount?.scrollTop}（期望仍 ≈1200）`,
   );
 
   // 恢复光标不应抢焦点

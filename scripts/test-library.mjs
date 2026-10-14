@@ -39,7 +39,9 @@ window.__localforage = localforage;
 window.__mount = () => {
   const host = document.getElementById('root');
   host.innerHTML = '';
-  createRoot(host).render(<App />);
+  // 与真实入口 index.tsx 一致：包 StrictMode。它会在挂载后立刻跑一遍
+  // effect 清理函数（模拟卸载），只修「非 StrictMode」环境的 bug 会漏掉。
+  createRoot(host).render(<React.StrictMode><App /></React.StrictMode>);
 };
 `;
 
