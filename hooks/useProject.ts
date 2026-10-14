@@ -1,132 +1,61 @@
-import { useState, useEffect } from 'react';
-import { ProjectData, CoverDesign, Chapter, TocItem } from '../types';
-import localforage from 'localforage';
+import { useCallback, useRef, useState } from 'react';
+import { ProjectData, Chapter, TocItem } from '../types';
+import { getInitialState, normalizeProject } from '../utils/projectDefaults';
 import { getResumeChapterId, markChapterAsCurrent } from '../utils/readingPosition';
 
-const STORAGE_KEY = 'epub_maker_project_v1';
-
-const INITIAL_COVER_DESIGN: CoverDesign = {
-    layoutMode: 'text-over',
-    fontFamilyTitle: 'serif',
-    fontSizeTitle: 48,
-    fontColorTitle: '#ffffff',
-    fontWeightTitle: 'bold',
-    letterSpacingTitle: 0,
-    fontFamilyAuthor: 'sans-serif',
-    fontSizeAuthor: 24,
-    fontColorAuthor: '#f3f4f6',
-    textAlign: 'center',
-    verticalOffset: 0,
-    overlayOpacity: 0.3,
-    textShadow: true,
-    borderStyle: 'none',
-    backgroundCSS: 'background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);',
-    showSeries: false
-};
-
-export const getInitialState = (): ProjectData => ({
-    metadata: {
-        title: '未命名书籍',
-        creator: '未知作者',
-        language: 'zh',
-        description: '',
-        publisher: '',
-        date: new Date().toISOString().split('T')[0],
-        series: '',
-        subjects: []
-    },
-    chapters: [],
-    images: [],
-    extraFiles: [],
-    cover: null,
-    coverId: null,
-    coverCustomCSS: '',
-    coverDesign: { ...INITIAL_COVER_DESIGN },
-    activeStyleId: 'classic',
-    isPresetStyleActive: true,
-    customCSS: '',
-    coverGeneratorState: {
-        selectedBgImageId: null,
-        activeTemplateIndex: 0,
-        showTextOnCover: true,
-        aiCoverPrompt: ''
-    },
-    customTocTitle: undefined,
-    customTocXhtml: undefined
-});
-
-export const useProject = () => {
+/**
+ * useProject - 单本书的内存数据与编辑操作
+ *
+ * 职责收窄为「当前这本书」：章节、图片、样式等内存状态，
+ * 以及章节内容更新、拆分等编辑动作。
+ *
+ * 不再自己读写存储 —— 书本的持久化由 useBookLibrary（书库）与
+ * useAutoSave（自动保存到当前书槽）负责。这样切换书籍只需调用
+ * loadProject 灌入新数据，不必关心存储细节。
+ *
+ * @param bookId 当前书籍 id，用于按书籍隔离阅读位置
+ */
+export const useProject = (bookId: string | null) => {
     const [project, setProject] = useState<ProjectData>(getInitialState());
     const [activeChapterId, setActiveChapterId] = useState<string | null>(null);
     const [isLoaded, setIsLoaded] = useState(false);
 
-    // Load from IndexedDB (localforage) on mount
-    useEffect(() => {
-        const loadProjectData = async () => {
-            try {
-                // Try to get from localforage first
-                let savedData: any = await localforage.getItem(STORAGE_KEY);
+    // bookId 会随切换书籍变化，用 ref 让回调读到最新值
+    const bookIdRef = useRef<string | null>(bookId);
+    bookIdRef.current = bookId;
 
-                // If not found in localforage, try migrating from legacy localStorage
-                if (!savedData) {
-                    const legacyDataStr = localStorage.getItem(STORAGE_KEY);
-                    if (legacyDataStr) {
-                        try {
-                            savedData = JSON.parse(legacyDataStr);
-                            // Migrate it to localforage immediately
-                            await localforage.setItem(STORAGE_KEY, savedData);
-                            // Clear legacy data
-                            localStorage.removeItem(STORAGE_KEY);
-                            console.log('Project data successfully migrated from LocalStorage to IndexedDB.');
-                        } catch (legacyErr) {
-                            console.error('Failed to parse legacy localStorage data', legacyErr);
-                        }
-                    }
-                }
+    /**
+     * 装载一本书的数据。
+     *
+     * 顺便决定初始选中哪一章：开启「记忆阅读位置」且记录的章节仍存在时，
+     * 回到那一章；否则打开第一章。
+     */
+    const loadProject = useCallback((data: ProjectData | null) => {
+        const next = normalizeProject(data);
+        setProject(next);
 
-                if (savedData) {
-                    setProject({
-                        ...getInitialState(),
-                        ...savedData,
-                        coverDesign: savedData.coverDesign || { ...INITIAL_COVER_DESIGN },
-                        extraFiles: savedData.extraFiles || [],
-                        isPresetStyleActive: savedData.isPresetStyleActive !== undefined ? savedData.isPresetStyleActive : true,
-                        coverGeneratorState: savedData.coverGeneratorState || {
-                            selectedBgImageId: null,
-                            activeTemplateIndex: 0,
-                            showTextOnCover: true,
-                            aiCoverPrompt: ''
-                        }
-                    });
-                    if (savedData.chapters && savedData.chapters.length > 0) {
-                        // 开启「记忆阅读位置」时回到上次编辑的那一章，否则沿用「打开第一章」
-                        const chapterIds = new Set(savedData.chapters.map((c: Chapter) => c.id));
-                        const resumeId = getResumeChapterId();
-                        setActiveChapterId(
-                            resumeId && chapterIds.has(resumeId) ? resumeId : savedData.chapters[0].id,
-                        );
-                    }
-                }
-            } catch (e) {
-                console.error("Failed to load project from storage", e);
-            } finally {
-                // We add a tiny delay for smooth UI transition
-                setTimeout(() => setIsLoaded(true), 300);
-            }
-        };
+        const chapters = next.chapters || [];
+        if (chapters.length > 0) {
+            const currentBookId = bookIdRef.current;
+            const resumeId = currentBookId ? getResumeChapterId(currentBookId) : null;
+            const canResume = !!resumeId && chapters.some((c) => c.id === resumeId);
+            setActiveChapterId(canResume ? resumeId : chapters[0].id);
+        } else {
+            setActiveChapterId(null);
+        }
 
-        loadProjectData();
+        setIsLoaded(true);
     }, []);
 
-    const updateProject = (updates: Partial<ProjectData>) => {
+    const updateProject = useCallback((updates: Partial<ProjectData>) => {
         setProject(prev => ({ ...prev, ...updates }));
-    };
+    }, []);
 
-    const updateChapters = (chapters: Chapter[]) => {
-        updateProject({ chapters });
-    };
+    const updateChapters = useCallback((chapters: Chapter[]) => {
+        setProject(prev => ({ ...prev, chapters }));
+    }, []);
 
-    const updateChapterContent = (newContent: string, newTitle?: string, subItems?: TocItem[]) => {
+    const updateChapterContent = useCallback((newContent: string, newTitle?: string, subItems?: TocItem[]) => {
         if (!activeChapterId) return;
         setProject(prev => ({
             ...prev,
@@ -144,9 +73,20 @@ export const useProject = () => {
                 return c;
             })
         }));
-    };
+    }, [activeChapterId]);
 
-    const splitChapter = (beforeContent: string, afterContent: string) => {
+    /**
+     * 切换当前章节。
+     * 开启记忆功能时顺手记录「最近查看的章节」，这样即使用户只是打开某章
+     * 浏览、没有滚动或编辑，刷新后也能回到这一章。
+     */
+    const setActiveChapter = useCallback((id: string | null) => {
+        setActiveChapterId(id);
+        const currentBookId = bookIdRef.current;
+        if (id && currentBookId) markChapterAsCurrent(currentBookId, id);
+    }, []);
+
+    const splitChapter = useCallback((beforeContent: string, afterContent: string) => {
         if (!activeChapterId) return;
 
         // Helper to parse title and subItems from HTML content
@@ -206,32 +146,23 @@ export const useProject = () => {
             setActiveChapterId(newChapter.id);
             return { ...prev, chapters: newChapters };
         });
-    };
+    }, [activeChapterId]);
 
-    const loadChaptersFromImport = (chapters: Chapter[], firstChapterId: string) => {
+    const loadChaptersFromImport = useCallback((chapters: Chapter[], firstChapterId: string) => {
         // 不再重复写 chapters —— 调用者已通过 onProjectUpdate 写入了完整数据
         // 如果这里再 updateProject({ chapters })，会覆盖掉刚写入的 images/cover 等字段
         setActiveChapterId(firstChapterId);
-    };
+    }, []);
 
     const activeChapter = project.chapters.find(c => c.id === activeChapterId);
-
-    /**
-     * 切换当前章节。
-     * 开启记忆功能时顺手记录「最近查看的章节」，这样即使用户只是打开某章
-     * 浏览、没有滚动或编辑，刷新后也能回到这一章。
-     */
-    const selectChapter = (id: string | null) => {
-        setActiveChapterId(id);
-        if (id) markChapterAsCurrent(id);
-    };
 
     return {
         project,
         activeChapterId,
         activeChapter,
         isLoaded,
-        setActiveChapterId: selectChapter,
+        loadProject,
+        setActiveChapterId: setActiveChapter,
         updateProject,
         updateChapters,
         updateChapterContent,
