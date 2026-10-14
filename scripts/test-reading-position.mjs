@@ -27,6 +27,12 @@ import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import os from 'node:os';
 
+/**
+ * 测试用书籍 id。位置按书籍隔离（v2 结构为 books[bookId].positions[chapterId]），
+ * 因此断言里要带上 bookId。此处与 harness 内的常量必须一致。
+ */
+const TEST_BOOK_ID = 'book_test_1';
+
 const tmp = path.resolve('scripts/.tmp-reading');
 rmSync(tmp, { recursive: true, force: true });
 mkdirSync(tmp, { recursive: true });
@@ -63,6 +69,10 @@ const project = (chapters) => ({
 // ─── A. TextEditor 挂载/卸载探针 ───
 let rootA = null;
 let rootB = null;
+
+/** 测试用书籍 id（位置按书籍隔离，见 utils/readingPosition.ts） */
+const TEST_BOOK_ID = 'book_test_1';
+
 window.__mountEditor = (chapterId, onUpdateProject) => {
   const host = document.getElementById('editorHost');
   host.innerHTML = '';
@@ -76,6 +86,7 @@ window.__mountEditor = (chapterId, onUpdateProject) => {
   const App = () => (
     <TextEditor
       chapterId={chapterId}
+      bookId={TEST_BOOK_ID}
       content={PARAGRAPHS}
       onContentChange={() => {}}
       onSplitChapter={() => {}}
@@ -94,20 +105,31 @@ window.__unmountEditor = () => {
 // 暴露滚动容器 / 编辑器实例，供断言使用
 window.__scrollEl = () => document.querySelector('#editorHost .overflow-y-auto');
 
-// ─── B. useProject 探针（验证刷新后打开上次编辑的章节） ───
-const ProjectProbe = () => {
-  const { activeChapterId, isLoaded } = useProject();
+// ─── B. useProject 探针（验证装载书籍时打开上次编辑的章节） ───
+// 重构后 useProject 不再自己读存储：由上层（书库）读出书稿再调用 loadProject。
+// 这里复刻这个流程，验证「选择哪一章」的逻辑。
+const ProjectProbe = ({ chapters }) => {
+  const { activeChapterId, isLoaded, loadProject } = useProject(TEST_BOOK_ID);
+  React.useEffect(() => {
+    // 装载一次即可，模拟书库读出数据后交给 useProject
+    loadProject({
+      metadata: { title: 'T', creator: 'A', language: 'zh', description: '', publisher: '', date: '2026-01-01' },
+      chapters,
+      images: [], extraFiles: [], cover: null, activeStyleId: 'classic', isPresetStyleActive: true, customCSS: '',
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   React.useEffect(() => {
     window.__probe = { activeChapterId, isLoaded };
   }, [activeChapterId, isLoaded]);
   return null;
 };
 
-window.__mountProjectProbe = () => {
+window.__mountProjectProbe = (chapters) => {
   const host = document.getElementById('probeHost');
   host.innerHTML = '<div id="probeRoot"></div>';
   rootB = createRoot(document.getElementById('probeRoot'));
-  rootB.render(<ProjectProbe />);
+  rootB.render(<ProjectProbe chapters={chapters} />);
 };
 
 window.__unmountProjectProbe = () => {
@@ -278,11 +300,11 @@ console.log('A. 章节内滚动位置的保存与恢复');
   // 防抖 500ms，且 selectionUpdate 也会重置定时器，留足余量
   await page.waitForTimeout(1200);
   const saved = await readReadingState();
-  const savedTop = saved?.positions?.ch1?.scrollTop ?? null;
+  const savedTop = saved?.books?.[TEST_BOOK_ID]?.positions?.ch1?.scrollTop ?? null;
   record(
     '开启后滚动，位置写入 localStorage',
     savedTop !== null && Math.abs(savedTop - 1200) < 2,
-    `  记录 scrollTop=${savedTop}（期望 ≈1200）；lastChapterId=${saved?.lastChapterId}`,
+    `  记录 scrollTop=${savedTop}（期望 ≈1200）；lastChapterId=${saved?.books?.[TEST_BOOK_ID]?.lastChapterId}`,
   );
 
   await unmountEditor();
@@ -347,7 +369,7 @@ console.log('\nC. 关闭开关清空已有记录');
   await userScrollTo(900);
   await page.waitForTimeout(1200);
   const before = await readReadingState();
-  const hadPosition = !!before?.positions?.ch1;
+  const hadPosition = !!before?.books?.[TEST_BOOK_ID]?.positions?.ch1;
 
   // 点击状态栏的开关按钮（真实 UI 交互）
   await page.click('#editorHost button[title^="已开启"]');
@@ -364,21 +386,28 @@ console.log('\nC. 关闭开关清空已有记录');
   );
 }
 
-// ─── 6. D. 刷新后打开上次编辑的章节（useProject） ───
-console.log('\nD. 刷新页面后打开上次编辑的章节');
-const seedProject = async (chapterIds) =>
-  page.evaluate(async (ids) => {
-    await window.__localforage.setItem('epub_maker_project_v1', {
-      metadata: { title: 'T', creator: 'A', language: 'zh', description: '', publisher: '', date: '2026-01-01' },
-      chapters: ids.map((id, i) => ({ id, title: '第' + (i + 1) + '章', content: '<p>x</p>', level: 1, subItems: [] })),
-      images: [], extraFiles: [], cover: null, activeStyleId: 'classic', isPresetStyleActive: true, customCSS: '',
-    });
-  }, chapterIds);
+// ─── 6. D. 装载书籍时打开上次编辑的章节（useProject.loadProject） ───
+console.log('\nD. 装载书籍时打开上次编辑的章节');
 
-/** 挂载 useProject 探针并等它加载完，返回当前激活章节 */
-const runProjectProbe = async () => {
+const makeChapters = (ids) =>
+  ids.map((id, i) => ({ id, title: '第' + (i + 1) + '章', content: '<p>x</p>', level: 1, subItems: [] }));
+
+/** 写入某本书「上次查看的章节」记录（v2 结构） */
+const seedResume = (chapterId) =>
+  page.evaluate(
+    ([bid, cid]) => {
+      localStorage.setItem(
+        'epub-maker-reading-position',
+        JSON.stringify({ version: 2, books: { [bid]: { lastChapterId: cid, positions: {} } } }),
+      );
+    },
+    [TEST_BOOK_ID, chapterId],
+  );
+
+/** 挂载探针并等装载完成，返回当前激活章节 */
+const runProjectProbe = async (chapterIds) => {
   await page.evaluate(() => window.__unmountProjectProbe());
-  await page.evaluate(() => window.__mountProjectProbe());
+  await page.evaluate((chapters) => window.__mountProjectProbe(chapters), makeChapters(chapterIds));
   await page.waitForFunction(() => window.__probe && window.__probe.isLoaded === true, null, { timeout: 20000 });
   return page.evaluate(() => window.__probe.activeChapterId);
 };
@@ -387,14 +416,8 @@ const runProjectProbe = async () => {
   // 开启：应回到记录的章节
   await resetStorage();
   await setEnabled(true);
-  await page.evaluate(() => {
-    localStorage.setItem(
-      'epub-maker-reading-position',
-      JSON.stringify({ lastChapterId: 'c2', positions: {} }),
-    );
-  });
-  await seedProject(['c1', 'c2', 'c3']);
-  const active = await runProjectProbe();
+  await seedResume('c2');
+  const active = await runProjectProbe(['c1', 'c2', 'c3']);
   record('开启时打开上次记录的章节（c2）', active === 'c2', `  activeChapterId=${active}`);
 }
 
@@ -402,19 +425,8 @@ const runProjectProbe = async () => {
   // 关闭：应回到第一章
   await resetStorage();
   await setEnabled(false);
-  await page.evaluate(() => {
-    localStorage.setItem(
-      'epub-maker-reading-position',
-      JSON.stringify({ lastChapterId: 'c2', positions: {} }),
-    );
-  });
-  await seedProject(['c1', 'c2', 'c3']);
-  const active = await page.evaluate(async () => {
-    window.__unmountProjectProbe();
-    window.__mountProjectProbe();
-    await new Promise((r) => setTimeout(r, 1200));
-    return window.__probe?.activeChapterId;
-  });
+  await seedResume('c2');
+  const active = await runProjectProbe(['c1', 'c2', 'c3']);
   record('关闭时仍打开第一章（c1）', active === 'c1', `  activeChapterId=${active}`);
 }
 
@@ -422,19 +434,8 @@ const runProjectProbe = async () => {
   // 记录的章节已被删除：回退到第一章而不是报错
   await resetStorage();
   await setEnabled(true);
-  await page.evaluate(() => {
-    localStorage.setItem(
-      'epub-maker-reading-position',
-      JSON.stringify({ lastChapterId: 'deleted-chapter', positions: {} }),
-    );
-  });
-  await seedProject(['c1', 'c2']);
-  const active = await page.evaluate(async () => {
-    window.__unmountProjectProbe();
-    window.__mountProjectProbe();
-    await new Promise((r) => setTimeout(r, 1200));
-    return window.__probe?.activeChapterId;
-  });
+  await seedResume('deleted-chapter');
+  const active = await runProjectProbe(['c1', 'c2']);
   record('记录的章节不存在时回退到第一章', active === 'c1', `  activeChapterId=${active}`);
 }
 
@@ -456,7 +457,7 @@ console.log('\nE. 滚动后立刻刷新（未等防抖到期）也不丢位置')
     const raw = localStorage.getItem('epub-maker-reading-position');
     return raw ? JSON.parse(raw) : null;
   });
-  const savedTop = saved?.positions?.ch1?.scrollTop ?? null;
+  const savedTop = saved?.books?.[TEST_BOOK_ID]?.positions?.ch1?.scrollTop ?? null;
   record(
     'pagehide 兜底：防抖未到期也能落盘',
     savedTop !== null && Math.abs(savedTop - 1400) < 2,

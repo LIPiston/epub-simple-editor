@@ -64,9 +64,16 @@ export interface UseReadingMemoryReturn {
   restoringRef: MutableRefObject<boolean>;
 }
 
-export function useReadingMemory(): UseReadingMemoryReturn {
+/**
+ * @param bookId 当前书籍 id。位置按书籍隔离存储 —— 书库支持「复制书籍」，
+ *   副本会连同章节 id 一起深拷贝，若只按 chapterId 记录，原书与副本会互相覆盖。
+ */
+export function useReadingMemory(bookId: string): UseReadingMemoryReturn {
   const [enabled, setEnabled] = useState<boolean>(() => isReadingMemoryEnabled());
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // bookId 可能随切换书籍而变化，用 ref 让回调始终读到最新值
+  const bookIdRef = useRef(bookId);
+  bookIdRef.current = bookId;
   // 用 ref 保存开关状态，供不需要重渲染的回调读取最新值。
   // 必须在**渲染期间**同步，而不是放进 useEffect：关闭开关时，旧 effect 的
   // 清理函数（其中的落盘逻辑）会在本次渲染提交阶段先于新 effect 执行，
@@ -90,7 +97,7 @@ export function useReadingMemory(): UseReadingMemoryReturn {
     const flushPending = () => {
       if (!enabledRef.current) return;
       const pending = pendingRef.current;
-      if (pending) saveChapterReadingPosition(pending.chapterId, pending.position);
+      if (pending) saveChapterReadingPosition(bookIdRef.current, pending.chapterId, pending.position);
     };
 
     window.addEventListener('pagehide', flushPending);
@@ -140,7 +147,7 @@ export function useReadingMemory(): UseReadingMemoryReturn {
       const pending = captured ?? pendingRef.current;
 
       if (pending && pending.chapterId === chapterId) {
-        saveChapterReadingPosition(pending.chapterId, pending.position);
+        saveChapterReadingPosition(bookIdRef.current, pending.chapterId, pending.position);
       }
     },
     [capture],
@@ -160,7 +167,7 @@ export function useReadingMemory(): UseReadingMemoryReturn {
         timerRef.current = null;
         const pending = pendingRef.current;
         if (pending && enabledRef.current) {
-          saveChapterReadingPosition(pending.chapterId, pending.position);
+          saveChapterReadingPosition(bookIdRef.current, pending.chapterId, pending.position);
         }
       }, SAVE_DEBOUNCE_MS);
     },
@@ -173,7 +180,7 @@ export function useReadingMemory(): UseReadingMemoryReturn {
       // 元素还没进文档时读不到有效高度，等下一次调用
       if (scrollEl.clientHeight <= 0) return false;
 
-      const saved = getChapterReadingPosition(chapterId);
+      const saved = getChapterReadingPosition(bookIdRef.current, chapterId);
       if (!saved) return false;
 
       const maxScroll = Math.max(0, scrollEl.scrollHeight - scrollEl.clientHeight);
