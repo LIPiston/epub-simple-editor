@@ -465,6 +465,76 @@ console.log('\nE. 滚动后立刻刷新（未等防抖到期）也不丢位置')
   );
 }
 
+// ─── 7. F. 聚焦不被旧光标带跑（以滚动位置为准） ───
+console.log('\nF. 聚焦不把视口拽回旧光标，也不污染记录');
+{
+  await resetStorage();
+  await setEnabled(true);
+  await mountEditor('ch1');
+  await waitEditorReady();
+
+  // 1) 滚到底部，在底部落一个光标
+  await page.evaluate(() => window.__scrollEl().scrollTo({ top: 999999, behavior: 'instant' }));
+  await page.waitForTimeout(200);
+  const bottomPoint = await page.evaluate(() => {
+    const r = window.__scrollEl().getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height - 40 };
+  });
+  await page.mouse.click(bottomPoint.x, bottomPoint.y);
+  await page.waitForTimeout(300);
+
+  // 2) 再滚回顶部继续阅读 —— 光标与视口由此分离
+  await userScrollTo(0);
+  await page.waitForTimeout(1200);
+
+  const savedRec = (await readReadingState())?.books?.[TEST_BOOK_ID]?.positions?.ch1;
+  record(
+    '记录中光标在底部、视口在顶部（两者分离）',
+    !!savedRec && savedRec.scrollTop < 2 && savedRec.caretFrom > 500,
+    `  scrollTop=${savedRec?.scrollTop} caretFrom=${savedRec?.caretFrom}`,
+  );
+
+  // 3) 重挂载，恢复阅读位置
+  await unmountEditor();
+  await mountEditor('ch1');
+  await waitEditorReady();
+  await page.waitForTimeout(1200);
+  const restored = await readScroll();
+  record(
+    '恢复后停在阅读位置（顶部）',
+    Math.abs(restored) < 2,
+    `  scrollTop=${restored}（期望 ≈0）`,
+  );
+
+  // 4) 走真实路径：点工具栏「加粗」。其内部是 editor.chain().focus()，
+  //    而 Tiptap 的 focus 默认 scrollIntoView:true，会把视口滚到当前选区 ——
+  //    修复前这里会跳到旧光标处（文档底部）。
+  const clicked = await page.evaluate(() => {
+    const btn = Array.from(document.querySelectorAll('#editorHost button')).find((b) =>
+      (b.getAttribute('title') || '').startsWith('加粗'),
+    );
+    if (!btn) return false;
+    btn.click();
+    return true;
+  });
+  await page.waitForTimeout(900);
+  const afterFocus = await readScroll();
+  record(
+    '点工具栏聚焦后视口不被旧光标拽走',
+    clicked && Math.abs(afterFocus - restored) < 2,
+    `  点击成功=${clicked}；聚焦后 scrollTop=${afterFocus}（期望仍 ≈${restored}）`,
+  );
+
+  // 5) 这次聚焦不能把「被带跑的位置」写回记录
+  await page.waitForTimeout(1200);
+  const afterRec = (await readReadingState())?.books?.[TEST_BOOK_ID]?.positions?.ch1;
+  record(
+    '聚焦没有把被带跑的位置写回记录',
+    !!afterRec && afterRec.scrollTop < 2,
+    `  记录 scrollTop=${afterRec?.scrollTop}（期望仍 ≈0）`,
+  );
+}
+
 await browser.close();
 rmSync(tmp, { recursive: true, force: true });
 
