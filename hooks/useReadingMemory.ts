@@ -131,6 +131,16 @@ export function useReadingMemory(bookId: string): UseReadingMemoryReturn {
   const restoringRef = useRef(false);
   // 最近一次健康的快照，等防抖到点或卸载收尾时落盘
   const pendingRef = useRef<PendingPosition | null>(null);
+  // 本实例是否已越过首帧。用于挡掉 StrictMode 挂载后立刻执行的那次清理
+  // （详见 flushPosition 的说明）。
+  const settledRef = useRef(false);
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      settledRef.current = true;
+    });
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -185,9 +195,20 @@ export function useReadingMemory(bookId: string): UseReadingMemoryReturn {
     [],
   );
 
+  /**
+   * 立即落盘（用于章节切换、卸载前的收尾）。
+   *
+   * 第一帧之前一律不写。StrictMode 会在挂载后立刻跑一遍 effect 的清理函数
+   * （模拟卸载），那一刻浏览器还没绘制、正文也没排版，读到的 scrollHeight
+   * 是「内容还没长出来」的假值（实测真实高度 3520 时这里只有 992）。
+   * 若照着写，就会把刚打开的真实阅读位置覆盖成 0，紧接着的恢复再读回来
+   * 只能是 0 —— 表现为「切章 / 刷新后位置总是从头开始」。
+   * 真正的卸载必发生在首帧之后，因此用「是否已越过首帧」把两者区分开。
+   */
   const flushPosition = useCallback(
     (chapterId: string, scrollEl: HTMLElement | null, editor: Editor | null) => {
       if (!enabledRef.current) return;
+      if (!settledRef.current) return;
 
       // 优先用当下还能读到的真实值；元素已卸载则退回最后一次健康快照
       const captured = capture(chapterId, scrollEl, editor);
