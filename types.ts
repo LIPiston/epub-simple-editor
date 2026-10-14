@@ -92,6 +92,7 @@ export interface ProjectData {
 }
 
 export type ViewMode =
+  | 'library'
   | 'files'
   | 'chapters'
   | 'metadata'
