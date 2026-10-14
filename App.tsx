@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ViewMode } from './types';
 import Sidebar from './components/layout/Sidebar';
 import { generateEpub } from './services/epub/generator';
@@ -8,6 +8,7 @@ import LoadingOverlay from './components/layout/LoadingOverlay';
 import ViewContainer from './components/layout/ViewContainer';
 import { useProject } from './hooks/useProject';
 import { useAutoSave } from './hooks/useAutoSave';
+import { useBookLibrary } from './hooks/useBookLibrary';
 import GlobalDialogs from './components/ui/GlobalDialogs';
 
 interface EditorFocusRequest {
@@ -18,30 +19,185 @@ interface EditorFocusRequest {
 }
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<ViewMode>('files');
+  const [currentView, setCurrentView] = useState<ViewMode>('library');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [editorFocusRequest, setEditorFocusRequest] = useState<EditorFocusRequest | null>(null);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [processMessage, setProcessMessage] = useState('');
 
+  // ─── 书库（多本书的索引与切换）───
+  const library = useBookLibrary();
+  const {
+    books: libraryBooks,
+    activeBookId,
+    initialize,
+    openBook,
+    createBook,
+    importFiles,
+    duplicateBook,
+    renameBook,
+    removeBook,
+    syncActiveBookMeta,
+    resetLibrary,
+  } = library;
+
+  // ─── 当前书的内存数据 ───
   const {
     project,
     activeChapterId,
     activeChapter,
     isLoaded,
+    loadProject,
     setActiveChapterId,
     updateProject,
     updateChapters,
     updateChapterContent,
     splitChapter,
     loadChaptersFromImport,
-  } = useProject();
+  } = useProject(activeBookId);
 
-  const { saveStatus, autoSaveEnabled, toggleAutoSave, clearStorage } = useAutoSave(project, isLoaded);
+  const { saveStatus, autoSaveEnabled, toggleAutoSave } = useAutoSave(project, activeBookId, isLoaded);
 
-  const handleReset = () => {
-    clearStorage();
+  // ─── 首次加载：迁移旧数据 → 读书库 → 装载当前书 ───
+  // initialize 内部去重，StrictMode 下重复调用不会建出两本空白书。
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      const { project: initialProject } = await initialize();
+      if (cancelled) return;
+      loadProject(initialProject);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialize, loadProject]);
+
+  // ─── 书稿变化时同步书目信息（章节数、体积、更新时间）───
+  // 防抖：编辑时 project 每 2 秒左右才落盘，这里跟进更新即可，不必每次按键都写索引。
+  //
+  // 刚装载的那一次必须跳过：否则每次「打开」书籍都会刷新 updatedAt，
+  // 书库里的「更新于」就失去意义（分不清是被编辑过还是仅打开过）。
+  const syncedMetaRef = useRef<{ bookId: string | null; signature: string | null }>({
+    bookId: null,
+    signature: null,
+  });
+
+  useEffect(() => {
+    if (!isLoaded || !activeBookId) return;
+
+    const signature = JSON.stringify(project);
+
+    // 换书或首次观察：记为基线，不回写
+    if (syncedMetaRef.current.bookId !== activeBookId) {
+      syncedMetaRef.current = { bookId: activeBookId, signature };
+      return;
+    }
+    if (signature === syncedMetaRef.current.signature) return;
+
+    const timer = setTimeout(() => {
+      syncedMetaRef.current = { bookId: activeBookId, signature };
+      void syncActiveBookMeta(project);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [project, isLoaded, activeBookId, syncActiveBookMeta]);
+
+  /** 打开某本书并跳到章节管理 */
+  const handleOpenBook = useCallback(async (bookId: string) => {
+    if (bookId === activeBookId) {
+      // 已是当前书：直接跳过去，不必重新读盘
+      setCurrentView('chapters');
+      return;
+    }
+    const data = await openBook(bookId);
+    if (data) {
+      loadProject(data);
+      setEditorFocusRequest(null);
+      setCurrentView('chapters');
+    }
+  }, [activeBookId, openBook, loadProject]);
+
+  /** 新建空白书并进去编辑 */
+  const handleCreateBook = useCallback(async () => {
+    const id = await createBook();
+    if (id) {
+      const data = await openBook(id);
+      if (data) {
+        loadProject(data);
+        setEditorFocusRequest(null);
+        setCurrentView('chapters');
+      }
+    }
+  }, [createBook, openBook, loadProject]);
+
+  /** 从书库导入文件为新书 */
+  const handleLibraryImport = useCallback(async (files: File[]) => {
+    setIsProcessing(true);
+    setProcessMessage(`正在导入 ${files.length} 个文件...`);
+    try {
+      const createdIds = await importFiles(files);
+      if (createdIds.length > 0) {
+        // importFiles 已把最后一本设为当前书，装载它并进入编辑
+        const data = await openBook(createdIds[createdIds.length - 1]);
+        if (data) {
+          loadProject(data);
+          setEditorFocusRequest(null);
+          setCurrentView('chapters');
+        }
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [importFiles, openBook, loadProject]);
+
+  /** 复制某本书并切过去 */
+  const handleDuplicateBook = useCallback(async (bookId: string) => {
+    const id = await duplicateBook(bookId);
+    if (id) {
+      const data = await openBook(id);
+      if (data) {
+        loadProject(data);
+        setEditorFocusRequest(null);
+        setCurrentView('chapters');
+      }
+    }
+  }, [duplicateBook, openBook, loadProject]);
+
+  /** 重命名：列表与书稿元数据都要改；若改的是当前书，同步内存里的书名 */
+  const handleRenameBook = useCallback(async (bookId: string, title: string) => {
+    await renameBook(bookId, title);
+    if (bookId === activeBookId) {
+      updateProject({ metadata: { ...project.metadata, title } });
+    }
+  }, [renameBook, activeBookId, project.metadata, updateProject]);
+
+  /** 删除书；删掉的若是当前书，就切到剩下的一本或新建 */
+  const handleDeleteBook = useCallback(async (bookId: string) => {
+    const wasActive = bookId === activeBookId;
+    await removeBook(bookId);
+
+    if (wasActive) {
+      const remaining = libraryBooks.filter((b) => b.id !== bookId);
+      if (remaining.length > 0) {
+        const data = await openBook(remaining[0].id);
+        if (data) loadProject(data);
+      } else {
+        // 删光了：新建一本空白书，避免界面停在无处可去的状态
+        const id = await createBook();
+        if (id) {
+          const data = await openBook(id);
+          if (data) loadProject(data);
+        }
+      }
+      setEditorFocusRequest(null);
+      setCurrentView('library');
+    }
+  }, [activeBookId, removeBook, libraryBooks, openBook, createBook, loadProject]);
+
+  const handleReset = async () => {
+    await resetLibrary();
     window.location.reload();
   };
 
@@ -110,7 +266,8 @@ const App: React.FC = () => {
     setIsProcessing(false);
   };
 
-  if (!isLoaded) {
+  // 书库尚未就绪、或当前书还在装载时显示加载态
+  if (!isLoaded || !activeBookId) {
     return <LoadingOverlay message="正在恢复上次的项目..." />;
   }
 
@@ -123,6 +280,7 @@ const App: React.FC = () => {
         onReset={handleReset}
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
+        currentBookTitle={project.metadata?.title}
       />
 
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
@@ -139,6 +297,7 @@ const App: React.FC = () => {
           <ViewContainer
             currentView={currentView}
             project={project}
+            bookId={activeBookId}
             activeChapterId={activeChapterId}
             activeChapter={activeChapter}
             editorFocusRequest={editorFocusRequest}
@@ -154,6 +313,14 @@ const App: React.FC = () => {
             onLoadingStart={handleLoadingStart}
             onLoadingEnd={handleLoadingEnd}
             onMobileBack={() => setActiveChapterId(null)}
+            libraryBooks={libraryBooks}
+            activeBookId={activeBookId}
+            onOpenBook={handleOpenBook}
+            onCreateBook={handleCreateBook}
+            onImportFiles={handleLibraryImport}
+            onDuplicateBook={handleDuplicateBook}
+            onRenameBook={handleRenameBook}
+            onDeleteBook={handleDeleteBook}
           />
         </div>
 
