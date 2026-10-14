@@ -10,6 +10,7 @@ import {
   Download,
   RotateCcw,
   FolderOpen,
+  Library,
   X
 } from 'lucide-react';
 import { dialog } from '../../services/dialog';
@@ -21,10 +22,13 @@ interface SidebarProps {
   onReset: () => void;
   isOpen: boolean;
   onClose: () => void;
+  /** 当前书名，显示在侧栏顶部，让用户清楚正在编辑哪一本 */
+  currentBookTitle?: string;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange, onExport, onReset, isOpen, onClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange, onExport, onReset, isOpen, onClose, currentBookTitle }) => {
   const menuItems: { id: ViewMode; label: string; icon: React.ReactNode }[] = [
+    { id: 'library', label: '书籍管理', icon: <Library size={18} /> },
     { id: 'files', label: '文件导入', icon: <FileText size={18} /> },
     { id: 'chapters', label: '目录管理', icon: <ListTree size={18} /> },
     { id: 'metadata', label: '书籍信息', icon: <Settings size={18} /> },
@@ -64,16 +68,33 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange, onExport, 
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="p-6 pb-4 flex justify-between items-start">
-          <div>
-            <div className="flex items-center space-x-3 text-gray-800 mb-8">
-              <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 text-white">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center space-x-3 text-gray-800 mb-6">
+              <div className="w-9 h-9 flex-none bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 text-white">
                 <Book size={20} />
               </div>
               <h1 className="text-xl font-bold tracking-tight">EPUB Maker</h1>
             </div>
+
+            {/* 当前书名：书库支持多本后，需要一眼看出正在编辑哪一本 */}
+            {currentBookTitle && (
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => handleMenuClick('library')}
+                title="当前编辑的书籍，点击回到书籍管理"
+                className="w-full mb-4 flex items-center gap-2 rounded-xl bg-white/70 hover:bg-white border border-gray-200 hover:border-blue-200 px-3 py-2 text-left transition-colors"
+              >
+                <Library size={14} className="flex-none text-blue-500" />
+                <span className="min-w-0 flex-1 text-xs font-semibold text-gray-700 truncate">
+                  {currentBookTitle}
+                </span>
+              </button>
+            )}
+
             <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 pl-2">Editor</div>
           </div>
-          <button onClick={onClose} className="md:hidden text-gray-400 hover:text-gray-600 p-1">
+          <button onClick={onClose} className="md:hidden text-gray-400 hover:text-gray-600 p-1 flex-none">
             <X size={20} />
           </button>
         </div>
