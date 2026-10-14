@@ -11,7 +11,8 @@
     "test:roundtrip": "node scripts/roundtrip.mjs",
     "test:editor": "node scripts/test-editor-caret.mjs",
     "test:reading": "node scripts/test-reading-position.mjs",
-    "test:pill": "node scripts/test-autosave-pill.mjs"
+    "test:pill": "node scripts/test-autosave-pill.mjs",
+    "test:library": "node scripts/test-library.mjs"
   },
   "dependencies": {
     "@google/genai": "latest",
