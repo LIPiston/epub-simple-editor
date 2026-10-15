@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ViewMode } from './types';
-import Sidebar from './components/layout/Sidebar';
+import Navigation from './components/layout/Navigation';
 import { generateEpub } from './services/epub/generator';
 import { Menu, PowerOff, Cloud, CheckCircle2, AlertTriangle } from 'lucide-react';
 
@@ -9,7 +9,10 @@ import ViewContainer from './components/layout/ViewContainer';
 import { useProject } from './hooks/useProject';
 import { useAutoSave } from './hooks/useAutoSave';
 import { useBookLibrary } from './hooks/useBookLibrary';
+import { useTheme } from './hooks/useTheme';
 import GlobalDialogs from './components/ui/GlobalDialogs';
+import TooltipLayer from './components/ui/TooltipLayer';
+import { DEFAULT_VIEW, getGroup, findGroupIdForView } from './components/layout/navConfig';
 
 interface EditorFocusRequest {
   anchorId?: string | null;
@@ -19,8 +22,8 @@ interface EditorFocusRequest {
 }
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<ViewMode>('library');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [currentView, setCurrentView] = useState<ViewMode>(DEFAULT_VIEW);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [editorFocusRequest, setEditorFocusRequest] = useState<EditorFocusRequest | null>(null);
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -58,6 +61,9 @@ const App: React.FC = () => {
   } = useProject(activeBookId);
 
   const { saveStatus, autoSaveEnabled, toggleAutoSave } = useAutoSave(project, activeBookId, isLoaded);
+
+  // 深/浅色主题：首次跟随系统，用户切换后记住选择
+  const { isDark, toggleTheme } = useTheme();
 
   // ─── 首次加载：迁移旧数据 → 读书库 → 装载当前书 ───
   // initialize 内部去重，StrictMode 下重复调用不会建出两本空白书。
@@ -272,24 +278,32 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-white font-sans text-gray-900">
-      <Sidebar
+    <div className="flex h-screen bg-white font-sans text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+      <Navigation
         currentView={currentView}
         onViewChange={setCurrentView}
         onExport={() => generateEpub(project)}
         onReset={handleReset}
-        isOpen={mobileMenuOpen}
-        onClose={() => setMobileMenuOpen(false)}
         currentBookTitle={project.metadata?.title}
+        mobileOpen={mobileNavOpen}
+        onMobileClose={() => setMobileNavOpen(false)}
+        isDark={isDark}
+        onToggleTheme={toggleTheme}
       />
 
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-        <div className="md:hidden flex items-center justify-between h-14 bg-white border-b border-gray-200 px-4 flex-none z-30">
-          <div className="flex items-center">
-            <button onClick={() => setMobileMenuOpen(true)} className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+        <div className="md:hidden flex items-center justify-between h-12 bg-white border-b border-gray-200 px-3 flex-none z-30 dark:border-gray-800 dark:bg-gray-900">
+          <div className="flex items-center min-w-0">
+            <button
+              onClick={() => setMobileNavOpen(true)}
+              title="打开导航"
+              className="p-2 -ml-1 text-gray-600 hover:bg-gray-100 rounded-md flex-none dark:text-gray-300 dark:hover:bg-gray-800"
+            >
               <Menu size={20} />
             </button>
-            <span className="font-bold text-gray-800 ml-2">EPUB Maker</span>
+            <span className="font-semibold text-gray-800 ml-1 truncate dark:text-gray-200">
+              {getGroup(findGroupIdForView(currentView)).label}
+            </span>
           </div>
         </div>
 
@@ -334,22 +348,22 @@ const App: React.FC = () => {
           title={autoSaveEnabled ? '点击关闭自动保存' : '点击开启自动保存'}
         >
           {!autoSaveEnabled ? (
-            <div className="flex items-center text-xs text-gray-500 bg-gray-100/80 backdrop-blur-md py-1.5 px-3 rounded-full shadow-md border border-gray-200 hover:bg-gray-200/80">
+            <div className="flex items-center text-xs text-gray-500 bg-white py-1.5 px-3 rounded-md border border-gray-200 hover:bg-gray-50 dark:text-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
               <PowerOff size={14} className="mr-2" />
               自动保存已关
             </div>
           ) : saveStatus === 'saving' ? (
-            <div className="flex items-center text-xs text-amber-600 bg-amber-50/80 backdrop-blur-md py-1.5 px-3 rounded-full shadow-md animate-in fade-in border border-amber-100 hover:bg-amber-100/80">
+            <div className="flex items-center text-xs text-orange-700 bg-orange-50 py-1.5 px-3 rounded-md border border-orange-200 hover:bg-orange-100 dark:text-orange-300 dark:bg-orange-950 dark:border-orange-800 dark:hover:bg-orange-900">
               <Cloud size={14} className="mr-2 animate-pulse" />
               保存中...
             </div>
           ) : saveStatus === 'error' ? (
-            <div className="flex items-center text-xs text-red-600 bg-red-50/90 backdrop-blur-md py-1.5 px-3 rounded-full shadow-md animate-in fade-in border border-red-200 hover:bg-red-100/80">
+            <div className="flex items-center text-xs text-red-700 bg-red-50 py-1.5 px-3 rounded-md border border-red-200 hover:bg-red-100 dark:text-red-300 dark:bg-red-950 dark:border-red-800 dark:hover:bg-red-900">
               <AlertTriangle size={14} className="mr-2" />
               保存失败(容量不足)
             </div>
           ) : (
-            <div className="flex items-center text-xs text-green-600 bg-green-50/80 backdrop-blur-md py-1.5 px-3 rounded-full shadow-md animate-in fade-in border border-green-100 hover:bg-green-100/80">
+            <div className="flex items-center text-xs text-orange-700 bg-white py-1.5 px-3 rounded-md border border-gray-200 hover:bg-gray-50 dark:text-orange-400 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
               <CheckCircle2 size={14} className="mr-2" />
               已保存
             </div>
@@ -360,6 +374,9 @@ const App: React.FC = () => {
 
         <GlobalDialogs />
       </main>
+
+      {/* 全局悬浮提示：替代系统绘制的 title 黑框，跟随主题 */}
+      <TooltipLayer />
     </div>
   );
 };
