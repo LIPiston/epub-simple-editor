@@ -33,10 +33,26 @@
         theme: {
           extend: {
             colors: {
+              /*
+                整个 gray 刻度替换成中性灰（R=G=B）。
+                Tailwind 自带的 gray 其实是「冷灰」——灰阶越高蓝越明显，
+                所以深色界面即使全是灰阶也仍然发蓝。这里按中性值重定义，
+                顺便保留项目已用的 750 / 850 / 950 三档。
+              */
               gray: {
-                750: '#2d3748',
-                850: '#1a202c',
-                950: '#0d1117',
+                50: '#fafafa',
+                100: '#f5f5f5',
+                200: '#e5e5e5',
+                300: '#d4d4d4',
+                400: '#a3a3a3',
+                500: '#737373',
+                600: '#525252',
+                700: '#404040',
+                750: '#333333',
+                800: '#262626',
+                850: '#1c1c1c',
+                900: '#171717',
+                950: '#0a0a0a',
               }
             },
             animation: {
@@ -60,21 +76,21 @@
         background: transparent; 
       }
       ::-webkit-scrollbar-thumb {
-        background: #cbd5e1; 
+        background: #c4c4c4; 
         border-radius: 20px;
         border: 2px solid transparent;
         background-clip: content-box;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8; 
+        background: #a3a3a3; 
         background-clip: content-box;
       }
       html.dark ::-webkit-scrollbar-thumb {
-        background: #3f4650;
+        background: #454545;
         background-clip: content-box;
       }
       html.dark ::-webkit-scrollbar-thumb:hover {
-        background: #566070;
+        background: #5c5c5c;
         background-clip: content-box;
       }
       
@@ -99,8 +115,8 @@
         所以在深色模式下依然能看到真实的排版效果。
       */
       html.dark .editor-paper {
-        background-color: #111827;
-        color: #e5e7eb;
+        background-color: #171717;
+        color: #e5e5e5;
       }
 
       /*
@@ -119,8 +135,8 @@
       html.dark .editor-paper .divider-3:after,
       html.dark .editor-paper .divider-4:after,
       html.dark .editor-paper .divider-5:after {
-        background: #111827;
-        background-color: #111827;
+        background: #171717;
+        background-color: #171717;
       }
       html.dark .editor-paper blockquote,
       html.dark .editor-paper .toc-link,
@@ -135,11 +151,11 @@
 
       /* 背景装饰网格 */
       .pattern-grid {
-        background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+        background-image: radial-gradient(#e5e5e5 1px, transparent 1px);
         background-size: 24px 24px;
       }
       html.dark .pattern-grid {
-        background-image: radial-gradient(#30363d 1px, transparent 1px);
+        background-image: radial-gradient(#333333 1px, transparent 1px);
       }
     </style>
     <script type="importmap">
@@ -159,7 +175,7 @@
     }
     </script>
   </head>
-  <body class="bg-[#F5F5F7] text-gray-900 dark:bg-gray-950 dark:text-gray-100 h-screen overflow-hidden">
+  <body class="bg-[#F5F5F5] text-gray-900 dark:bg-gray-950 dark:text-gray-100 h-screen overflow-hidden">
     <div id="root" class="h-full"></div>
     <script type="module" src="./index.tsx"></script>
   </body>
