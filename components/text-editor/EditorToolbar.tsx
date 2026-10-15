@@ -326,16 +326,6 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
           <Divider />
 
           <div className="flex items-center space-x-1 mx-0.5">
-            {/* 插入图片 */}
-            <button
-              onClick={onOpenImagePicker}
-              className="flex items-center px-2 md:px-3 py-1.5 bg-orange-50 text-orange-600 hover:bg-orange-100 rounded-lg text-xs md:text-sm font-medium transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
-              title="插入图片"
-            >
-              <ImageIcon size={14} className="md:mr-1.5" />
-              <span className="hidden md:inline">图片</span>
-            </button>
-
             {/* 分割线按钮 - 平板及以上 */}
             <div className="relative hidden sm:block" ref={dividerRef}>
               <button
@@ -353,6 +343,16 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 <ChevronDown size={12} className={`ml-0.5 transition-transform ${showDividerMenu ? 'rotate-180' : ''}`} />
               </button>
             </div>
+
+            {/* 插入图片 */}
+            <button
+              onClick={onOpenImagePicker}
+              className="flex items-center px-2 md:px-3 py-1.5 bg-orange-50 text-orange-600 hover:bg-orange-100 rounded-lg text-xs md:text-sm font-medium transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+              title="插入图片"
+            >
+              <ImageIcon size={14} className="md:mr-1.5" />
+              <span className="hidden md:inline">图片</span>
+            </button>
           </div>
 
           <Divider />
