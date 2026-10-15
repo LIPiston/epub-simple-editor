@@ -25,15 +25,18 @@ interface FileTreeProps {
     onToggleNode: (id: string) => void;
     onDelete: (node: FileNode) => void;
     onRename: (node: FileNode) => void;
+    /** 覆盖容器类名：移动端用来把固定 288px 宽改成整屏 */
+    className?: string;
 }
 
 const FileTree: React.FC<FileTreeProps> = ({
     displayedNodes, selectedNodeId, setSelectedNodeId,
     searchTerm, setSearchTerm, totalSize, onAddFile,
-    expandedIds, onToggleNode, onDelete, onRename
+    expandedIds, onToggleNode, onDelete, onRename,
+    className,
 }) => {
     return (
-      <div className="w-72 bg-gray-50 border-r border-gray-200 flex flex-col flex-shrink-0 z-10 dark:bg-gray-900 dark:border-gray-800">
+      <div className={`bg-gray-50 border-r border-gray-200 flex flex-col flex-shrink-0 z-10 dark:bg-gray-900 dark:border-gray-800 ${className ?? 'w-72'}`}>
           {/* Toolbar: title + count + search + new */}
           <div className="px-3 py-2 border-b border-gray-200 space-y-2 flex-shrink-0 dark:border-gray-800">
               <div className="flex items-center justify-between">

@@ -455,6 +455,7 @@ const StructureView: React.FC<StructureViewProps> = ({ project, onUpdateProject 
 
     return (
         <div className="flex h-full bg-gray-50 overflow-hidden dark:bg-gray-900">
+            {/* 移动端：列表与内容同屏放不下，改成两屏切换（与目录管理一致）*/}
             <FileTree
                 displayedNodes={displayedNodes}
                 selectedNodeId={selectedNodeId}
@@ -467,25 +468,31 @@ const StructureView: React.FC<StructureViewProps> = ({ project, onUpdateProject 
                 onToggleNode={toggleNode}
                 onDelete={handleDeleteNode}
                 onRename={handleRenameFile}
+                className={selectedNodeId ? 'hidden md:flex w-72' : 'flex w-full md:w-72'}
             />
 
-            <FileContentArea
-                selectedNode={selectedNode}
-                selectedNodeId={selectedNodeId}
-                breadcrumbs={breadcrumbs}
-                isDirty={isDirty}
-                editorContent={editorContent}
-                setEditorContent={setEditorContent}
-                setIsDirty={setIsDirty}
-                previewUrl={previewUrl}
-                onSave={handleSave}
-                onDelete={handleDeleteFile}
-                onRename={() => handleRenameFile()}
-                onDownload={handleDownloadFile}
-                onToggleActive={toggleFileActive}
-                chapters={project.chapters}
-                onUpdateFile={handleUpdateFileMeta}
-            />
+            {/* 未选中文件时，移动端只留列表（内容区的「未选择文件」提示没意义，
+                留着还会把列表挤成半屏）*/}
+            <div className={`${selectedNodeId ? 'flex' : 'hidden md:flex'} flex-1 min-w-0`}>
+                <FileContentArea
+                    selectedNode={selectedNode}
+                    selectedNodeId={selectedNodeId}
+                    breadcrumbs={breadcrumbs}
+                    isDirty={isDirty}
+                    editorContent={editorContent}
+                    setEditorContent={setEditorContent}
+                    setIsDirty={setIsDirty}
+                    previewUrl={previewUrl}
+                    onSave={handleSave}
+                    onDelete={handleDeleteFile}
+                    onRename={() => handleRenameFile()}
+                    onDownload={handleDownloadFile}
+                    onToggleActive={toggleFileActive}
+                    chapters={project.chapters}
+                    onUpdateFile={handleUpdateFileMeta}
+                    onMobileBack={() => setSelectedNodeId(null)}
+                />
+            </div>
         </div>
     );
 };

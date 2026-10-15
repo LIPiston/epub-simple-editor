@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { 
   ChevronRight, Save, Trash2, Download, Edit2, FileImage, 
-  FolderOpen, Eye, Info, FileCode, SlidersHorizontal, Check, X
+  FolderOpen, Eye, Info, FileCode, SlidersHorizontal, Check, X, ArrowLeft
 } from 'lucide-react';
 import { FileNode } from './types';
 import { Chapter, ExtraFile } from '../../types';
@@ -42,13 +42,15 @@ interface FileContentAreaProps {
     onToggleActive: () => void;
     chapters?: Chapter[];
     onUpdateFile?: (id: string, updates: Partial<ExtraFile>) => void;
+    /** 移动端：返回文件列表（清空选中项） */
+    onMobileBack?: () => void;
 }
 
 const FileContentArea: React.FC<FileContentAreaProps> = ({
     selectedNode, selectedNodeId, breadcrumbs, isDirty, 
     editorContent, setEditorContent, setIsDirty, previewUrl,
     onSave, onDelete, onRename, onDownload, onToggleActive,
-    chapters = [], onUpdateFile
+    chapters = [], onUpdateFile, onMobileBack
 }) => {
     const lineCount = useMemo(() => editorContent.split('\n').length, [editorContent]);
     const [previewChapterId, setPreviewChapterId] = useState<string>('default');
@@ -153,6 +155,17 @@ const FileContentArea: React.FC<FileContentAreaProps> = ({
             {/* Header Toolbar */}
             <div className="h-10 border-b border-gray-200 bg-white flex items-center justify-between px-3 flex-shrink-0 z-20 dark:border-gray-800 dark:bg-gray-900">
                 <div className="flex items-center space-x-2 overflow-hidden mr-3">
+                    {/* 移动端：返回文件列表（列表与内容同一屏放不下，改成两屏切换）*/}
+                    {onMobileBack && (
+                        <button
+                            onClick={onMobileBack}
+                            className="md:hidden h-7 w-7 -ml-1 flex items-center justify-center text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors flex-shrink-0 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800"
+                            title="返回文件列表"
+                            aria-label="返回文件列表"
+                        >
+                            <ArrowLeft size={16} />
+                        </button>
+                    )}
                     {/* Breadcrumbs */}
                     <div className="flex items-center text-xs text-gray-500 whitespace-nowrap overflow-hidden text-ellipsis dark:text-gray-400">
                         {breadcrumbs?.map((node, i) => (
