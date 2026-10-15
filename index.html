@@ -2,7 +2,13 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!--
+      viewport-fit=cover：让页面铺满刘海屏，安全区再通过 env(safe-area-inset-*)
+      单独让开（否则顶部会被状态栏/刘海压住）。
+      maximum-scale/user-scalable=no：编辑器是应用型界面，双指缩放会与
+      「调整字体大小」和抽屉手势互相干扰，这里保持固定缩放。
+    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>EPUB Maker - 专业电子书制作工具</title>
     <!--
       主题预设：必须在首屏绘制前同步执行，避免「先闪浅色再变深色」。
@@ -97,6 +103,47 @@
       body {
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+      }
+
+      /*
+        移动端视口高度。
+        100vh 在手机上等于「地址栏收起时」的高度，地址栏一出现就会把底部
+        控件（编辑器状态栏、自动保存胶囊）顶出屏幕。dvh 跟随实际可视高度，
+        这里覆盖 Tailwind 的 .h-screen，并保留 100vh 作为老浏览器兜底。
+      */
+      html, body { height: 100%; }
+      body { overscroll-behavior: none; }
+      /*
+        选择器写成 html .h-screen（而不是 .h-screen）：Tailwind 的 CDN 版本
+        在运行时才注入样式表，位置在本段之后，同特异度会盖掉这里的规则。
+        加一层 html 提高特异度，才能稳定生效。
+      */
+      @supports (height: 100dvh) {
+        html .h-screen { height: 100dvh; }
+      }
+
+      /* 触摸操作不需要点击高亮，也不需要 300ms 后的灰色方框 */
+      * { -webkit-tap-highlight-color: transparent; }
+
+      /*
+        刘海屏 / 手势条安全区。
+        env() 在无刘海设备上取 0，因此可以无条件套用。
+        顶栏与底栏用 min-height 而不是固定高度，避免 safe-area 把内容压扁。
+      */
+      .pad-safe-top { padding-top: env(safe-area-inset-top, 0px); }
+      .pad-safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+      .pad-safe-x {
+        padding-left: env(safe-area-inset-left, 0px);
+        padding-right: env(safe-area-inset-right, 0px);
+      }
+
+      /*
+        触摸设备没有「悬停」这个状态。目录行、文件树、图片上的操作按钮平时
+        是 opacity-0、靠 group-hover 才现身的，在手机上就永远点不到。
+        这里统一给它们加 .hover-reveal，无悬停设备上强制常显。
+      */
+      @media (hover: none) {
+        .hover-reveal { opacity: 1 !important; }
       }
 
       /* 编辑器预览基础样式 */
