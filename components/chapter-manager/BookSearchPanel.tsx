@@ -32,29 +32,29 @@ const BookSearchPanel: React.FC<BookSearchPanelProps> = ({ chapters, onFocusSear
   );
 
   return (
-    <div className="mt-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-3 space-y-3">
+    <div className="mt-2 rounded-md border border-orange-200 bg-orange-50 p-2.5 space-y-2 dark:border-gray-700 dark:bg-gray-800">
       <div className="flex items-center justify-between">
-        <div className="text-xs font-bold uppercase tracking-wider text-blue-600">全书搜索</div>
-        <span className="text-[10px] text-blue-500">{results.length} 个命中章节</span>
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-orange-600 dark:text-gray-300">全书搜索</div>
+        <span className="text-[11px] text-orange-500 dark:text-gray-300">{results.length} 个命中章节</span>
       </div>
 
       {/* 搜索输入框 */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <input
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder={useRegex ? '输入正则表达式...' : '输入关键词，跨章节搜索正文'}
-          className="flex-1 rounded-xl border border-blue-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400"
+          className="flex-1 min-w-0 h-7 rounded-md border border-orange-200 bg-white px-2 text-xs outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:placeholder:text-gray-500"
           autoFocus
         />
         {/* 区分大小写 */}
         <button
           onClick={() => setMatchCase(!matchCase)}
-          className={`flex-shrink-0 rounded-lg px-2 py-2 text-xs font-medium transition-colors ${
+          className={`flex-shrink-0 h-7 rounded-md px-2 text-[11px] font-medium transition-colors ${
             matchCase
-              ? 'bg-blue-500 text-white'
-              : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+              ? 'bg-orange-500 text-white dark:bg-gray-600'
+              : 'bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
           }`}
           title={matchCase ? '区分大小写：开' : '区分大小写：关'}
         >
@@ -63,10 +63,10 @@ const BookSearchPanel: React.FC<BookSearchPanelProps> = ({ chapters, onFocusSear
         {/* 正则模式 */}
         <button
           onClick={() => setUseRegex(!useRegex)}
-          className={`flex-shrink-0 rounded-lg px-2 py-2 text-[10px] font-bold transition-colors ${
+          className={`flex-shrink-0 h-7 rounded-md px-2 text-[10px] font-bold transition-colors ${
             useRegex
-              ? 'bg-blue-500 text-white'
-              : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+              ? 'bg-orange-500 text-white dark:bg-gray-600'
+              : 'bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
           }`}
           title={useRegex ? '关闭正则' : '开启正则'}
         >
@@ -83,8 +83,8 @@ const BookSearchPanel: React.FC<BookSearchPanelProps> = ({ chapters, onFocusSear
               onClick={() => setSearchTerm(preset.pattern)}
               className={`rounded-full px-2 py-0.5 text-[10px] font-medium transition-colors ${
                 searchTerm === preset.pattern
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                  ? 'bg-orange-500 text-white dark:bg-gray-600'
+                  : 'bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
               }`}
             >
               {preset.label}
@@ -94,32 +94,31 @@ const BookSearchPanel: React.FC<BookSearchPanelProps> = ({ chapters, onFocusSear
       )}
 
       {searchTerm.trim() && (
-        <div className="max-h-52 overflow-y-auto space-y-2">
+        <div className="max-h-52 overflow-y-auto divide-y divide-orange-100 rounded-md border border-orange-100 bg-white dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800">
           {results.length > 0 ? (
             results.map((result) => (
               <button
                 key={result.chapterId}
                 onClick={() => onFocusSearchText(result.chapterId, searchTerm)}
-                className="w-full rounded-xl border border-blue-100 bg-white px-3 py-2 text-left
-                  hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                className="block w-full px-2 py-1.5 text-left transition-colors hover:bg-orange-50 dark:hover:bg-gray-700"
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-gray-800 truncate">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-semibold text-gray-800 truncate dark:text-gray-200">
                     {result.chapterTitle}
                   </span>
-                  <span className="text-[10px] text-blue-600 font-bold">
+                  <span className="text-[10px] text-orange-600 font-bold flex-shrink-0 dark:text-gray-300">
                     {result.occurrences} 次
                   </span>
                 </div>
                 {result.snippets.map((snippet, i) => (
-                  <div key={i} className="mt-1 text-xs text-gray-500 line-clamp-1">
+                  <div key={i} className="mt-0.5 text-[11px] text-gray-500 line-clamp-1 dark:text-gray-400">
                     {snippet}
                   </div>
                 ))}
               </button>
             ))
           ) : (
-            <div className="text-xs text-gray-500 bg-white rounded-xl px-3 py-3 border border-blue-100">
+            <div className="px-2 py-6 text-[11px] text-gray-400 text-center dark:text-gray-500">
               没有找到匹配内容。
             </div>
           )}

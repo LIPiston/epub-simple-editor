@@ -60,41 +60,41 @@ const CleanupPanel: React.FC<CleanupPanelProps> = ({
   const ruleKeys = Object.keys(options) as CleanupRuleKey[];
 
   return (
-    <div className="mt-3 rounded-2xl border border-amber-100 bg-amber-50/70 p-3 space-y-3">
+    <div className="mt-2 rounded-md border border-orange-200 bg-orange-50 p-2.5 space-y-2 dark:border-orange-800 dark:bg-orange-950">
       <div className="flex items-center justify-between">
-        <div className="text-xs font-bold uppercase tracking-wider text-amber-700">一键清理</div>
-        <span className="text-[10px] font-bold text-amber-600">{totalIssues} 处待处理</span>
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-orange-700 dark:text-orange-300">一键清理</div>
+        <span className="text-[11px] font-semibold text-orange-600 dark:text-orange-400">{totalIssues} 处待处理</span>
       </div>
 
       {/* 规则复选框 */}
-      <div className="space-y-2">
+      <div className="divide-y divide-orange-100 rounded-md border border-orange-100 bg-white dark:divide-orange-900 dark:border-orange-900 dark:bg-gray-800">
         {ruleKeys.map((key) => (
           <label
             key={key}
-            className="flex items-center justify-between rounded-xl bg-white border border-amber-100 px-3 py-2 text-xs text-gray-700"
+            className="flex items-center justify-between px-2 py-1.5 text-[11px] text-gray-700 dark:text-gray-300"
           >
             <span>{CLEANUP_RULE_LABELS[key]}</span>
             <input
               type="checkbox"
               checked={options[key]}
               onChange={(e) => onOptionsChange({ ...options, [key]: e.target.checked })}
-              className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+              className="h-3.5 w-3.5 rounded border-gray-300 text-orange-600 focus:ring-orange-500 dark:border-gray-600"
             />
           </label>
         ))}
       </div>
 
       {/* 预览区 */}
-      <div className="max-h-40 overflow-y-auto space-y-2">
+      <div className="max-h-40 overflow-y-auto space-y-1">
         {preview.length > 0 ? (
           preview.slice(0, 8).map((ch) => (
-            <div key={ch.chapterId} className="rounded-xl bg-white border border-amber-100 px-3 py-2">
-              <div className="text-xs font-semibold text-gray-800 truncate">{ch.chapterTitle}</div>
+            <div key={ch.chapterId} className="rounded-sm border border-orange-100 bg-white px-2 py-1.5 dark:border-orange-900 dark:bg-gray-800">
+              <div className="text-[11px] font-semibold text-gray-800 truncate dark:text-gray-200">{ch.chapterTitle}</div>
               <div className="mt-1 flex flex-wrap gap-1">
                 {ch.changes.map((change) => (
                   <span
                     key={change.key}
-                    className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700"
+                    className="rounded-full bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold text-orange-700 dark:bg-orange-900 dark:text-orange-300"
                   >
                     {change.label} {change.total}
                   </span>
@@ -103,7 +103,7 @@ const CleanupPanel: React.FC<CleanupPanelProps> = ({
             </div>
           ))
         ) : (
-          <div className="rounded-xl bg-white border border-amber-100 px-3 py-3 text-xs text-gray-500">
+          <div className="rounded-sm border border-orange-100 bg-white px-2 py-6 text-[11px] text-gray-400 text-center dark:border-orange-900 dark:bg-gray-800 dark:text-gray-500">
             当前没有可清理的问题。
           </div>
         )}
@@ -112,9 +112,9 @@ const CleanupPanel: React.FC<CleanupPanelProps> = ({
       {/* 执行按钮 */}
       <button
         onClick={handleRunCleanup}
-        className="w-full rounded-xl bg-amber-500 px-3 py-2 text-sm font-bold text-white hover:bg-amber-600 transition-colors"
+        className="w-full h-7 rounded-md bg-orange-500 px-2 text-xs font-semibold text-white hover:bg-orange-600 transition-colors dark:bg-orange-500 dark:hover:bg-orange-600"
       >
-        <Wand2 size={14} className="inline mr-1.5" />
+        <Wand2 size={12} className="inline mr-1.5 -mt-0.5" />
         执行清理
       </button>
     </div>

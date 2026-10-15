@@ -55,27 +55,27 @@ const ChapterEditDialog: React.FC<ChapterEditDialogProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6"
+        className="bg-white rounded-lg border border-gray-200 w-full max-w-sm p-4 dark:bg-gray-900 dark:border-gray-700"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 标题栏 */}
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-gray-800">章节设置</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={18} />
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">章节设置</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
+            <X size={16} />
           </button>
         </div>
 
         {/* 标题输入 */}
-        <div className="mb-4">
-          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">章节标题</label>
+        <div className="mb-3">
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase mb-1 dark:text-gray-400">章节标题</label>
           <input
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
-              focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full h-8 border border-gray-200 rounded-md px-2.5 text-xs
+              focus:border-orange-400 focus:ring-1 focus:ring-orange-300 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
             value={formData.title}
             onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
             onKeyDown={handleKeyDown}
@@ -84,34 +84,34 @@ const ChapterEditDialog: React.FC<ChapterEditDialogProps> = ({
         </div>
 
         {/* ID 输入 */}
-        <div className="mb-6">
-          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">唯一 ID</label>
+        <div className="mb-4">
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase mb-1 dark:text-gray-400">唯一 ID</label>
           <input
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono text-gray-600
-              focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full h-8 border border-gray-200 rounded-md px-2.5 text-xs font-mono text-gray-600
+              focus:border-orange-400 focus:ring-1 focus:ring-orange-300 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
             value={formData.id}
             onChange={(e) => setFormData((prev) => ({ ...prev, id: e.target.value }))}
             onKeyDown={handleKeyDown}
           />
-          <p className="text-[10px] text-gray-400 mt-1">
+          <p className="text-[10px] text-gray-400 mt-1 dark:text-gray-500">
             此 ID 可用于内部锚点链接 (如 href="#chapter-id")
           </p>
         </div>
 
         {/* 按钮栏 */}
-        <div className="flex justify-end space-x-2">
+        <div className="flex justify-end gap-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+            className="h-8 px-3 text-xs text-gray-600 hover:bg-gray-100 rounded-md dark:text-gray-300 dark:hover:bg-gray-800"
           >
             取消
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-lg
-              font-medium shadow-sm shadow-blue-500/30 flex items-center"
+            className="h-8 px-3 text-xs bg-orange-600 text-white hover:bg-orange-700 rounded-md
+              font-semibold flex items-center dark:bg-gray-600 dark:hover:bg-gray-500"
           >
-            <Save size={14} className="mr-1.5" /> 保存更改
+            <Save size={13} className="mr-1.5" /> 保存更改
           </button>
         </div>
       </div>

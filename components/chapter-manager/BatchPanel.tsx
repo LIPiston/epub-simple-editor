@@ -139,37 +139,37 @@ const BatchPanel: React.FC<BatchPanelProps> = ({
   };
 
   return (
-    <div className="mt-3 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-3 shadow-sm shadow-indigo-100/40">
-      <div className="flex items-center justify-between gap-3">
+    <div className="mt-2 rounded-md border border-orange-200 bg-orange-50 p-2.5 dark:border-gray-700 dark:bg-gray-800">
+      <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 text-xs font-bold text-indigo-700">
-            <ListChecks size={14} />
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-orange-700 dark:text-gray-200">
+            <ListChecks size={12} />
             批量操作
           </div>
-          <div className="mt-1 text-[11px] text-indigo-500">
-            已选 {selectedCount} 个，范围 {selectedRange}
+          <div className="mt-0.5 text-[11px] text-orange-500 dark:text-gray-300">
+            已选 {selectedCount} 个 · 范围 {selectedRange}
           </div>
         </div>
         <button
           onClick={onClearSelection}
           disabled={selectedCount === 0}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-orange-200 bg-white text-gray-500 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
           title="清空选择"
         >
-          <Eraser size={14} />
+          <Eraser size={12} />
         </button>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-2">
+      <div className="mt-2 grid grid-cols-2 gap-1.5">
         <button
           onClick={onToggleSelectAll}
-          className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-indigo-200 bg-white px-3 py-2 text-xs font-semibold text-indigo-700 transition-colors hover:bg-indigo-50"
+          className="inline-flex h-7 items-center justify-center gap-1 rounded-md border border-orange-200 bg-white px-2 text-[11px] font-semibold text-orange-700 transition-colors hover:bg-orange-50 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
         >
-          <ListTree size={14} />
+          <ListTree size={12} />
           {allFilteredSelected ? '取消全选' : '选择全部'}
         </button>
         <BatchButton
-          icon={<Combine size={14} />}
+          icon={<Combine size={12} />}
           label="合并所选"
           disabled={selectedCount < 2}
           onClick={handleMergeSelected}
@@ -177,39 +177,39 @@ const BatchPanel: React.FC<BatchPanelProps> = ({
         />
       </div>
 
-      <div className="mt-2 grid grid-cols-2 gap-2">
+      <div className="mt-1.5 grid grid-cols-2 gap-1.5">
         <BatchButton
-          icon={<BookOpenCheck size={14} />}
+          icon={<BookOpenCheck size={12} />}
           label="加入目录"
           disabled={selectedCount === 0}
           onClick={() => applyBatchUpdate((chapter) => ({ ...chapter, excludeFromToc: false }))}
         />
         <BatchButton
-          icon={<BookOpenCheck size={14} />}
+          icon={<BookOpenCheck size={12} />}
           label="排除目录"
           disabled={selectedCount === 0}
           onClick={() => applyBatchUpdate((chapter) => ({ ...chapter, excludeFromToc: true }))}
         />
         <BatchButton
-          icon={<Layers size={14} />}
+          icon={<Layers size={12} />}
           label="设为一级"
           disabled={selectedCount === 0}
           onClick={() => applyBatchUpdate((chapter) => ({ ...chapter, level: 1 }))}
         />
         <BatchButton
-          icon={<Layers size={14} />}
+          icon={<Layers size={12} />}
           label="设为二级"
           disabled={selectedCount === 0}
           onClick={() => applyBatchUpdate((chapter) => ({ ...chapter, level: 2 }))}
         />
         <BatchButton
-          icon={<ListChecks size={14} />}
+          icon={<ListChecks size={12} />}
           label="批量重命名"
           disabled={selectedCount === 0}
           onClick={handleBatchRename}
         />
         <BatchButton
-          icon={<Trash2 size={14} />}
+          icon={<Trash2 size={12} />}
           label="批量删除"
           disabled={selectedCount === 0}
           onClick={handleBatchDelete}
@@ -217,7 +217,7 @@ const BatchPanel: React.FC<BatchPanelProps> = ({
         />
       </div>
 
-      <div className="mt-3 rounded-xl bg-white/70 px-3 py-2 text-[11px] leading-5 text-slate-500">
+      <div className="mt-2 rounded-sm border border-orange-100 bg-white px-2 py-1.5 text-[11px] leading-4 text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
         合并会按当前目录顺序执行，并保留第一个所选章节的位置、ID、层级和目录状态。
       </div>
     </div>
@@ -235,12 +235,12 @@ const BatchButton: React.FC<{
   <button
     onClick={onClick}
     disabled={disabled}
-    className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+    className={`inline-flex h-7 items-center justify-center gap-1 rounded-md px-2 text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
       danger
-        ? 'bg-red-500 text-white hover:bg-red-600'
+        ? 'bg-red-500 text-white hover:bg-red-600 dark:bg-red-500 dark:hover:bg-red-600'
         : strong
-          ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/20 hover:bg-indigo-700'
-          : 'border border-indigo-100 bg-white text-slate-700 hover:bg-indigo-50'
+          ? 'bg-orange-600 text-white hover:bg-orange-700 dark:bg-gray-600 dark:hover:bg-gray-500'
+          : 'border border-orange-200 bg-white text-gray-700 hover:bg-orange-50 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
     }`}
   >
     {icon}

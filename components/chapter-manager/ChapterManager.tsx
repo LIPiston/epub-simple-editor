@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Chapter, ImageAsset } from '../../types';
-import { Layers3, ListTree, Plus, Search, ShieldAlert, Sparkles } from 'lucide-react';
+import { Eraser, ListChecks, ListPlus, ListTree, ShieldCheck, TextSearch } from 'lucide-react';
 import { dialog } from '../../services/dialog';
 import { CleanupOptions } from '../../services/analysis/book';
 import { getTocStats, getTocTitle } from '../../services/toc';
@@ -216,63 +216,65 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
 
   return (
     <div
-      className={`relative flex h-full min-w-[360px] flex-shrink-0 flex-col border-r border-gray-200/50 bg-white/70 backdrop-blur-xl ${
+      className={`relative flex h-full min-w-[300px] flex-shrink-0 flex-col border-r border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 ${
         className || 'w-96'
       }`}
     >
-      <div className="sticky top-0 z-10 border-b border-gray-200/50 bg-white/90 px-4 pb-3 pt-4 backdrop-blur-lg">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="shrink-0 text-2xl font-bold tracking-tight text-gray-900">目录</h2>
+      <div className="sticky top-0 z-10 border-b border-gray-200 bg-white px-3 pb-2.5 pt-3 dark:border-gray-800 dark:bg-gray-900">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="shrink-0 text-sm font-semibold text-gray-900 dark:text-gray-100">目录</h2>
 
-          <div className="flex shrink-0 items-center gap-1.5">
+          <div className="flex shrink-0 items-center gap-px">
             <PanelToggleButton
-              icon={<Search size={16} />}
+              icon={<TextSearch size={15} />}
               title="全书搜索"
               active={activePanel === 'search'}
               onClick={() => togglePanel('search')}
             />
             <PanelToggleButton
-              icon={<Sparkles size={16} />}
+              icon={<Eraser size={15} />}
               title="一键清理"
               active={activePanel === 'cleanup'}
               onClick={() => togglePanel('cleanup')}
             />
             <PanelToggleButton
-              icon={<Layers3 size={16} />}
+              icon={<ListChecks size={15} />}
               title="批量操作"
               active={activePanel === 'batch'}
               onClick={() => togglePanel('batch')}
             />
             <PanelToggleButton
-              icon={<ShieldAlert size={16} />}
+              icon={<ShieldCheck size={15} />}
               title="敏感词修正"
               active={activePanel === 'sensitiveWords'}
               onClick={() => togglePanel('sensitiveWords')}
             />
+            <span className="mx-1 h-4 w-px bg-gray-200 dark:bg-gray-700" />
             <button
               onClick={handleAdd}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-500 transition-colors hover:bg-blue-100 hover:text-blue-600"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-orange-50 hover:text-orange-600 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-300"
               title="添加章节"
             >
-              <Plus size={17} />
+              <ListPlus size={16} />
             </button>
           </div>
         </div>
 
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-2 flex items-center gap-2">
           <button
             onClick={() => setShowTocEditor(true)}
-            className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-3 text-sm font-bold text-white shadow-md shadow-indigo-500/20 transition-colors hover:bg-indigo-700"
+            className="inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-2 text-xs font-medium text-gray-700 transition-colors hover:border-orange-300 hover:text-orange-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:border-gray-600 dark:hover:text-gray-100"
             title="编辑导出目录"
           >
-            <ListTree size={16} />
+            <ListTree size={14} />
             编辑目录
           </button>
 
-          <div className="flex shrink-0 items-center gap-1 rounded-2xl bg-gray-50 px-2 py-1.5 text-[11px] font-semibold text-gray-500">
-            <span>{tocStats.includedChapters} 入目录</span>
-            <span className="text-gray-300">/</span>
-            <span>{tocStats.totalChapters} 总数</span>
+          <div className="flex shrink-0 items-center gap-1 text-[11px] font-medium text-gray-400 dark:text-gray-500">
+            <span className="tabular-nums">{tocStats.includedChapters}</span>
+            <span className="text-gray-300 dark:text-gray-600">/</span>
+            <span className="tabular-nums">{tocStats.totalChapters}</span>
+            <span>入目录</span>
           </div>
         </div>
 
@@ -310,7 +312,7 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3 py-3 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto px-1.5 py-1.5 custom-scrollbar">
         {filteredChapters.map((chapterItem) => (
           <ChapterItem
             key={chapterItem.id}
@@ -338,9 +340,9 @@ const ChapterManager: React.FC<ChapterManagerProps> = ({
         ))}
 
         {chapters.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-gray-200 bg-white/60 py-12 text-center">
-            <p className="text-sm font-medium text-gray-400">暂无章节</p>
-            <p className="mt-1 text-xs text-gray-400">点击右上角加号创建第一章</p>
+          <div className="px-3 py-10 text-center">
+            <p className="text-xs text-gray-400 dark:text-gray-500">暂无章节</p>
+            <p className="mt-1 text-[11px] text-gray-400 dark:text-gray-500">点上方的 + 创建第一章</p>
           </div>
         )}
       </div>
@@ -374,8 +376,10 @@ const PanelToggleButton: React.FC<{
 }> = ({ icon, title, active, onClick }) => (
   <button
     onClick={onClick}
-    className={`inline-flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${
-      active ? 'bg-indigo-100 text-indigo-700' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+    className={`inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
+      active
+        ? 'bg-orange-50 text-orange-600 dark:bg-gray-700 dark:text-gray-300'
+        : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200'
     }`}
     title={title}
   >

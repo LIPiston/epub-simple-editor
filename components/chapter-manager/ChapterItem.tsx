@@ -1,13 +1,15 @@
 import React from 'react';
 import { Chapter } from '../../types';
 import {
-  ArrowDownToLine,
+  ArrowDown,
+  ArrowUp,
+  BookmarkCheck,
+  BookmarkX,
+  Combine,
   CheckSquare,
-  ChevronDown,
-  ChevronUp,
-  Eye,
-  EyeOff,
-  Settings,
+  Heading1,
+  Heading2,
+  Pencil,
   Square,
   Trash2,
 } from 'lucide-react';
@@ -37,6 +39,13 @@ interface ChapterItemProps {
   isDropTarget?: boolean;
 }
 
+/**
+ * 目录里的一行章节。
+ *
+ * 紧凑面板式：单行主信息 + 一行次要信息，操作按钮平时收起、悬停/聚焦时才出现。
+ * 层级用 H1/H2 图标表示（比「一级/二级」文字更直观也更省地方），
+ * 是否导出到目录用书签图标表示。
+ */
 const ChapterItem: React.FC<ChapterItemProps> = ({
   chapter,
   currentChapterId,
@@ -62,6 +71,7 @@ const ChapterItem: React.FC<ChapterItemProps> = ({
   const isActive = currentChapterId === chapter.id;
   const isIncludedInToc = !chapter.excludeFromToc;
   const idx = chapter.originalIndex;
+  const LevelIcon = chapter.level === 1 ? Heading1 : Heading2;
 
   const handleRowClick = () => {
     if (selectionMode) {
@@ -72,7 +82,7 @@ const ChapterItem: React.FC<ChapterItemProps> = ({
   };
 
   return (
-    <div className="mb-1.5">
+    <div className="mb-0.5">
       <div
         draggable={!selectionMode}
         onClick={handleRowClick}
@@ -82,133 +92,135 @@ const ChapterItem: React.FC<ChapterItemProps> = ({
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
-        className={`group relative rounded-2xl px-3 py-3 transition-all duration-200 ${
-          isActive
-            ? 'bg-blue-500 text-white shadow-md shadow-blue-200'
-            : 'text-slate-800 hover:bg-slate-100/80'
-        } ${batchSelected ? 'ring-2 ring-indigo-300' : ''} ${isDragging ? 'opacity-50' : ''} ${
-          isDropTarget ? 'outline outline-2 outline-blue-300 outline-dashed' : ''
-        }`}
+        className={`group relative flex cursor-pointer select-none items-start gap-1.5 rounded-md py-1.5 pl-1.5 pr-2 transition-colors ${
+          isActive ? 'bg-orange-50 dark:bg-gray-700' : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+        } ${isDragging ? 'opacity-40' : ''} ${
+          isDropTarget ? 'ring-1 ring-inset ring-orange-400' : ''
+        } ${selectionMode && batchSelected ? 'bg-orange-50 dark:bg-gray-700' : ''}`}
       >
-        <div className="flex min-w-0 items-start gap-2 pr-2">
-          {selectionMode ? (
+        {/* 选中态左侧竖条：比整行反白更克制，也不影响文字的对比度 */}
+        {isActive && <span className="absolute inset-y-1 left-0 w-0.5 rounded-full bg-orange-600 dark:bg-gray-600" />}
+
+        {selectionMode ? (
+          <button
+            onClick={(event) => {
+              event.stopPropagation();
+              onToggleBatchSelect?.(chapter.id);
+            }}
+            className={`mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-sm transition-colors ${
+              batchSelected ? 'text-orange-600 dark:text-gray-300' : 'text-gray-300 hover:text-orange-500 dark:text-gray-600 dark:hover:text-gray-300'
+            }`}
+            title={batchSelected ? '取消选择' : '选择章节'}
+          >
+            {batchSelected ? <CheckSquare size={15} /> : <Square size={15} />}
+          </button>
+        ) : (
+          <DragHandle className="mt-0.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 dark:text-gray-500 dark:hover:text-gray-300" />
+        )}
+
+        {/* 层级图标 */}
+        <LevelIcon
+          size={15}
+          className={`mt-0.5 shrink-0 ${isActive ? 'text-orange-600 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'}`}
+        />
+
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <span
+              className={`min-w-0 flex-1 truncate text-[13px] leading-5 ${
+                isActive ? 'font-semibold text-orange-700 dark:text-gray-200' : 'text-gray-800 dark:text-gray-200'
+              }`}
+              title={chapter.title}
+            >
+              {chapter.title || '无标题章节'}
+            </span>
+
+            {/* 目录开关：常驻显示，因为它直接决定这一章会不会出现在导出目录里 */}
             <button
               onClick={(event) => {
                 event.stopPropagation();
-                onToggleBatchSelect?.(chapter.id);
+                onToggleToc(idx);
               }}
-              className={`mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                isActive ? 'hover:bg-white/20' : 'text-indigo-600 hover:bg-indigo-50'
+              className={`shrink-0 rounded-sm p-0.5 transition-colors ${
+                isIncludedInToc
+                  ? 'text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900'
+                  : 'text-gray-300 hover:bg-gray-200 hover:text-gray-500 dark:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-400'
               }`}
-              title={batchSelected ? '取消选择' : '选择章节'}
+              title={isIncludedInToc ? '已加入目录，点击排除' : '已排除目录，点击加入'}
             >
-              {batchSelected ? <CheckSquare size={17} /> : <Square size={17} />}
+              {isIncludedInToc ? <BookmarkCheck size={14} /> : <BookmarkX size={14} />}
             </button>
-          ) : (
-            <DragHandle className="mt-1 shrink-0" />
-          )}
+          </div>
 
-          <button
-            onClick={(event) => {
-              event.stopPropagation();
-              onToggleToc(idx);
-            }}
-            className={`mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-xl transition-colors ${
-              isActive
-                ? 'bg-white/15 text-white hover:bg-white/25'
-                : isIncludedInToc
-                  ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
-                  : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
-            }`}
-            title={isIncludedInToc ? '已加入目录，点击排除' : '已排除目录，点击加入'}
-          >
-            {isIncludedInToc ? <Eye size={15} /> : <EyeOff size={15} />}
-          </button>
-
-          <div className="min-w-0 flex-1">
-            <div className="flex min-w-0 items-center gap-2">
-              <span
-                className={`shrink-0 rounded-lg px-2 py-1 text-[11px] font-bold ${
-                  isActive
-                    ? 'bg-white/20 text-white'
-                    : chapter.level === 1
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-slate-100 text-slate-600'
-                }`}
-              >
-                {chapter.level === 1 ? '一级' : '二级'}
-              </span>
-              <div
-                className={`min-w-0 flex-1 truncate text-sm font-bold leading-6 ${
-                  isActive ? 'text-white' : 'text-slate-900'
-                }`}
-                title={chapter.title}
-              >
-                {chapter.title || '无标题章节'}
-              </div>
-            </div>
-
-            <div
-              className={`mt-1 flex min-w-0 items-center gap-2 whitespace-nowrap text-[11px] ${
-                isActive ? 'text-blue-100' : 'text-slate-500'
-              }`}
-            >
-              <span>#{idx + 1}</span>
-              <span>{chapter.subItems?.length || 0} 个小标题</span>
-              {!isIncludedInToc && <span className="truncate">不导出到目录</span>}
-            </div>
+          <div className="mt-px flex min-w-0 items-center gap-1.5 text-[11px] leading-4 text-gray-400 dark:text-gray-500">
+            <span className="tabular-nums">#{idx + 1}</span>
+            {!!chapter.subItems?.length && (
+              <>
+                <span className="text-gray-300 dark:text-gray-600">·</span>
+                <span>{chapter.subItems.length} 个小标题</span>
+              </>
+            )}
+            {!isIncludedInToc && (
+              <>
+                <span className="text-gray-300 dark:text-gray-600">·</span>
+                <span className="truncate">不导出到目录</span>
+              </>
+            )}
           </div>
         </div>
 
-        <div className="absolute right-2 top-2 flex items-center gap-0.5 rounded-xl bg-white/95 p-1 opacity-0 shadow-lg shadow-slate-900/10 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-          {idx < totalChapters - 1 && (
-            <ActionButton
-              icon={<ArrowDownToLine size={14} />}
-              title="与下一章合并"
+        {/* 操作区：悬停或键盘聚焦时才出现，平时让出空间给标题 */}
+        {!selectionMode && (
+          <div className="absolute right-1 top-1 flex items-center gap-px rounded-md border border-gray-200 bg-white p-0.5 opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 dark:border-gray-700 dark:bg-gray-800">
+            {idx < totalChapters - 1 && (
+              <RowAction
+                icon={<Combine size={13} />}
+                title="与下一章合并"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onMergeNext(idx);
+                }}
+              />
+            )}
+            <RowAction
+              icon={<Pencil size={13} />}
+              title="编辑标题和 ID"
               onClick={(event) => {
                 event.stopPropagation();
-                onMergeNext(idx);
+                onEdit(event, chapter);
               }}
             />
-          )}
-          <ActionButton
-            icon={<Settings size={14} />}
-            title="编辑标题和 ID"
-            onClick={(event) => {
-              event.stopPropagation();
-              onEdit(event, chapter);
-            }}
-          />
-          <ActionButton
-            icon={<ChevronUp size={14} />}
-            title="上移"
-            disabled={idx === 0}
-            onClick={(event) => {
-              event.stopPropagation();
-              onMove(idx, 'up');
-            }}
-          />
-          <ActionButton
-            icon={<ChevronDown size={14} />}
-            title="下移"
-            disabled={idx === totalChapters - 1}
-            onClick={(event) => {
-              event.stopPropagation();
-              onMove(idx, 'down');
-            }}
-          />
-          <button
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={(event) => {
-              event.stopPropagation();
-              onDelete(idx);
-            }}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50"
-            title="删除章节"
-          >
-            <Trash2 size={14} />
-          </button>
-        </div>
+            <RowAction
+              icon={<ArrowUp size={13} />}
+              title="上移"
+              disabled={idx === 0}
+              onClick={(event) => {
+                event.stopPropagation();
+                onMove(idx, 'up');
+              }}
+            />
+            <RowAction
+              icon={<ArrowDown size={13} />}
+              title="下移"
+              disabled={idx === totalChapters - 1}
+              onClick={(event) => {
+                event.stopPropagation();
+                onMove(idx, 'down');
+              }}
+            />
+            <button
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={(event) => {
+                event.stopPropagation();
+                onDelete(idx);
+              }}
+              className="inline-flex h-5 w-5 items-center justify-center rounded-sm text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950 dark:hover:text-red-400"
+              title="删除章节"
+            >
+              <Trash2 size={13} />
+            </button>
+          </div>
+        )}
       </div>
 
       <SubItemTree
@@ -222,7 +234,7 @@ const ChapterItem: React.FC<ChapterItemProps> = ({
   );
 };
 
-const ActionButton: React.FC<{
+const RowAction: React.FC<{
   icon: React.ReactNode;
   title: string;
   disabled?: boolean;
@@ -232,7 +244,7 @@ const ActionButton: React.FC<{
     onMouseDown={(event) => event.preventDefault()}
     onClick={onClick}
     disabled={disabled}
-    className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-30"
+    className="inline-flex h-5 w-5 items-center justify-center rounded-sm text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-30 dark:text-gray-500 dark:hover:bg-gray-700 dark:hover:text-gray-200"
     title={title}
   >
     {icon}
