@@ -16,7 +16,8 @@
     "test:nav": "node scripts/test-navigation.mjs",
     "test:theme": "node scripts/test-theme.mjs",
     "test:toc-toggle": "node scripts/test-chapter-toc-toggle.mjs",
-    "test:mobile": "node scripts/test-mobile.mjs"
+    "test:mobile": "node scripts/test-mobile.mjs",
+    "test:toolbar": "node scripts/test-toolbar.mjs"
   },
   "dependencies": {
     "@tiptap/extension-heading": "^3.20.1",
