@@ -11,6 +11,7 @@ import { ViewMode } from '../../types';
 import ActivityBar from './ActivityBar';
 import SidePanel from './SidePanel';
 import { NAV_GROUPS, findGroupIdForView, getGroup } from './navConfig';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 interface NavigationProps {
   currentView: ViewMode;
@@ -27,7 +28,6 @@ interface NavigationProps {
   onToggleTheme: () => void;
 }
 
-const MOBILE_BREAKPOINT = 768;
 const COLLAPSE_STORAGE_KEY = 'epub-maker-nav-collapsed';
 
 const Navigation: React.FC<NavigationProps> = ({
@@ -48,16 +48,7 @@ const Navigation: React.FC<NavigationProps> = ({
     if (typeof window === 'undefined') return false;
     return localStorage.getItem(COLLAPSE_STORAGE_KEY) === 'true';
   });
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false,
-  );
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
+  const isMobile = useIsMobile();
 
   // 当前视图变了（含从书库「打开」跳转），一级分组随之同步
   useEffect(() => {
@@ -117,12 +108,14 @@ const Navigation: React.FC<NavigationProps> = ({
     <>
       {isMobile && mobileOpen && (
         <div
+          data-drawer-scrim="left"
           className="fixed inset-0 z-40 bg-black/40 md:hidden"
           onClick={onMobileClose}
         />
       )}
 
       <div
+        data-drawer={isMobile ? 'left' : undefined}
         className={`z-50 flex h-full ${
           isMobile
             ? `fixed inset-y-0 left-0 transition-transform duration-200 ${

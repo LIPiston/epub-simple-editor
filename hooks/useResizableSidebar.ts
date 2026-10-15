@@ -9,6 +9,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useIsMobile } from './useIsMobile';
 
 interface UseResizableSidebarOptions {
   /** 默认宽度 (px) */
@@ -69,21 +70,12 @@ export function useResizableSidebar(
   });
 
   const [isDragging, setIsDragging] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
 
   const startXRef = useRef<number>(0);
   const startWidthRef = useRef<number>(0);
 
-  // ─── 检测移动端 ───
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < mobileBreakpoint);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, [mobileBreakpoint]);
+  // ─── 检测移动端（与全应用共用同一断点与实现）───
+  const isMobile = useIsMobile(mobileBreakpoint);
 
   // ─── 拖拽开始 ───
   const handleMouseDown = useCallback(
