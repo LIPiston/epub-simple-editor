@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ViewMode } from './types';
 import Navigation from './components/layout/Navigation';
+import OutlineDrawer from './components/layout/OutlineDrawer';
 import { generateEpub } from './services/epub/generator';
-import { Menu, PowerOff, Cloud, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Menu, PowerOff, Cloud, CheckCircle2, AlertTriangle, ListTree } from 'lucide-react';
 
 import LoadingOverlay from './components/layout/LoadingOverlay';
 import ViewContainer from './components/layout/ViewContainer';
@@ -10,6 +11,8 @@ import { useProject } from './hooks/useProject';
 import { useAutoSave } from './hooks/useAutoSave';
 import { useBookLibrary } from './hooks/useBookLibrary';
 import { useTheme } from './hooks/useTheme';
+import { useIsMobile } from './hooks/useIsMobile';
+import { useDrawerGestures } from './hooks/useDrawerGestures';
 import GlobalDialogs from './components/ui/GlobalDialogs';
 import TooltipLayer from './components/ui/TooltipLayer';
 import { DEFAULT_VIEW, getGroup, findGroupIdForView } from './components/layout/navConfig';
@@ -24,6 +27,7 @@ interface EditorFocusRequest {
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewMode>(DEFAULT_VIEW);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [mobileOutlineOpen, setMobileOutlineOpen] = useState(false);
   const [editorFocusRequest, setEditorFocusRequest] = useState<EditorFocusRequest | null>(null);
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -64,6 +68,48 @@ const App: React.FC = () => {
 
   // 深/浅色主题：首次跟随系统，用户切换后记住选择
   const { isDark, toggleTheme } = useTheme();
+
+  // ─── 移动端（<768px）：两级导航走左抽屉，章节大纲走右抽屉 ───
+  const isMobile = useIsMobile();
+
+  // 右侧大纲只在编辑某章时才有内容；不满足条件时直接视为关闭，
+  // 避免切走视图后抽屉还挂在那里展示上一章的残留内容。
+  const outlineAvailable = currentView === 'chapters' && !!activeChapter;
+  const outlineOpen = isMobile && mobileOutlineOpen && outlineAvailable;
+
+  const closeMobileNav = useCallback(() => setMobileNavOpen(false), []);
+  const closeMobileOutline = useCallback(() => setMobileOutlineOpen(false), []);
+
+  // 两个抽屉互斥：同时滑出会各占半屏、中间只留一条缝
+  const openMobileNav = useCallback(() => {
+    setMobileOutlineOpen(false);
+    setMobileNavOpen(true);
+  }, []);
+  const openMobileOutline = useCallback(() => {
+    setMobileNavOpen(false);
+    setMobileOutlineOpen(true);
+  }, []);
+
+  const toggleMobileOutline = useCallback(() => {
+    if (outlineOpen) setMobileOutlineOpen(false);
+    else openMobileOutline();
+  }, [outlineOpen, openMobileOutline]);
+
+  // 左右边缘滑动开关抽屉（参考 Obsidian 手机端）
+  useDrawerGestures({
+    enabled: isMobile,
+    leftOpen: mobileNavOpen,
+    rightOpen: outlineOpen,
+    onOpenLeft: openMobileNav,
+    onCloseLeft: closeMobileNav,
+    onOpenRight: openMobileOutline,
+    onCloseRight: closeMobileOutline,
+  });
+
+  // 切到别的视图（或关掉当前章节）时，收起大纲抽屉
+  useEffect(() => {
+    if (!outlineAvailable) setMobileOutlineOpen(false);
+  }, [outlineAvailable]);
 
   // ─── 首次加载：迁移旧数据 → 读书库 → 装载当前书 ───
   // initialize 内部去重，StrictMode 下重复调用不会建出两本空白书。
@@ -218,6 +264,8 @@ const App: React.FC = () => {
     if (activeChapterId !== chapterId) {
       setActiveChapterId(chapterId);
     }
+    // 大纲抽屉跳转后收起，否则会盖住刚定位到的正文
+    closeMobileOutline();
     setTimeout(() => {
       setEditorFocusRequest({
         anchorId,
@@ -278,7 +326,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-white font-sans text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+    <div className="flex h-screen bg-white font-sans text-gray-900 dark:bg-gray-900 dark:text-gray-100 pad-safe-x pad-safe-bottom">
       <Navigation
         currentView={currentView}
         onViewChange={setCurrentView}
@@ -286,17 +334,29 @@ const App: React.FC = () => {
         onReset={handleReset}
         currentBookTitle={project.metadata?.title}
         mobileOpen={mobileNavOpen}
-        onMobileClose={() => setMobileNavOpen(false)}
+        onMobileClose={closeMobileNav}
         isDark={isDark}
         onToggleTheme={toggleTheme}
       />
 
+      {/* 移动端右抽屉：当前章节的大纲（与左侧导航互斥）*/}
+      <OutlineDrawer
+        open={outlineOpen}
+        onClose={closeMobileOutline}
+        chapter={activeChapter}
+        onJump={handleScrollToAnchor}
+      />
+
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-        <div className="md:hidden flex items-center justify-between h-12 bg-white border-b border-gray-200 px-3 flex-none z-30 dark:border-gray-800 dark:bg-gray-900">
+        {/* z-[45]：要高于抽屉遮罩（z-40），这样抽屉开着时顶栏仍可点——
+            可以直接从「导航」切到「大纲」而不必先点遮罩关掉一个。
+            但仍低于抽屉本体（z-50），抽屉滑出时会盖住顶栏。 */}
+        <div className="md:hidden flex items-center justify-between h-12 bg-white border-b border-gray-200 px-3 flex-none z-[45] pad-safe-top dark:border-gray-800 dark:bg-gray-900">
           <div className="flex items-center min-w-0">
             <button
-              onClick={() => setMobileNavOpen(true)}
+              onClick={openMobileNav}
               title="打开导航"
+              aria-label="打开导航"
               className="p-2 -ml-1 text-gray-600 hover:bg-gray-100 rounded-md flex-none dark:text-gray-300 dark:hover:bg-gray-800"
             >
               <Menu size={20} />
@@ -305,6 +365,25 @@ const App: React.FC = () => {
               {getGroup(findGroupIdForView(currentView)).label}
             </span>
           </div>
+
+          {/* 大纲入口：只在编辑章节时出现，其余视图没有大纲可看 */}
+          {outlineAvailable && (
+            <button
+              onClick={toggleMobileOutline}
+              data-outline-toggle="true"
+              data-active={outlineOpen ? 'true' : 'false'}
+              title={outlineOpen ? '关闭大纲' : '打开章节大纲'}
+              aria-label={outlineOpen ? '关闭大纲' : '打开章节大纲'}
+              aria-expanded={outlineOpen}
+              className={`p-2 -mr-1 flex-none rounded-md transition-colors ${
+                outlineOpen
+                  ? 'text-orange-600 bg-orange-50 dark:text-gray-200 dark:bg-gray-800'
+                  : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
+              }`}
+            >
+              <ListTree size={20} />
+            </button>
+          )}
         </div>
 
         <div className="flex-1 flex flex-col h-full overflow-hidden relative">
