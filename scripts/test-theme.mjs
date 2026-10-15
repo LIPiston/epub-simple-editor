@@ -392,9 +392,12 @@ console.log('\n6. 深色模式下编辑器纸张与正文对比度');
       const now = Date.now();
       await lf.setItem('epub_maker_book_' + id, {
         metadata: { title: '纸张测试书', creator: '作者', language: 'zh', description: '', publisher: '', date: '2026-01-01' },
-        chapters: [{ id: id + '_c1', title: '第一章', level: 1, subItems: [], content: '<h1>第一章</h1><p>正文内容，用来测量纸张与文字的对比度。</p>' }],
+        chapters: [{ id: id + '_c1', title: '第一章', level: 1, subItems: [], content: '<h1>第一章</h1><h2>第一节</h2><p>正文内容，用来测量纸张与文字的对比度。</p>' }],
         images: [], extraFiles: [], cover: null, coverId: null, coverCustomCSS: '',
-        activeStyleId: 'classic', isPresetStyleActive: true, customCSS: '',
+        // 用 minimal：它给 h1 写死了纯黑（#000），而 h2 不写 color、继承纸张文字色。
+        // 深色下若不把标题颜色拉回来，就会出现「一级标题黑、二级标题白」的割裂，
+        // 正是这条断言要钉住的回归。
+        activeStyleId: 'minimal', isPresetStyleActive: true, customCSS: '',
       });
       await lf.setItem('epub_maker_library_index_v1', {
         books: [{ id, title: '纸张测试书', author: '作者', chapterCount: 1, imageCount: 0, sizeBytes: 1024, createdAt: now, updatedAt: now }],
@@ -427,7 +430,11 @@ console.log('\n6. 深色模式下编辑器纸张与正文对比度');
         if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { bg = c; break; }
         el = el.parentElement;
       }
-      return { bg, color: getComputedStyle(paper).color };
+      const colorOf = (sel) => {
+        const node = paper.querySelector(sel);
+        return node ? getComputedStyle(node).color : null;
+      };
+      return { bg, color: getComputedStyle(paper).color, h1: colorOf('h1'), h2: colorOf('h2') };
     });
   };
 
@@ -445,6 +452,18 @@ console.log('\n6. 深色模式下编辑器纸张与正文对比度');
       '深色下正文颜色够亮（深底上读得清）',
       textLum > 150,
       `  正文颜色=${paper.color} 亮度=${textLum.toFixed(0)}（要求 >150）`,
+    );
+    // 标题必须与正文同色：主题照白纸写死的一级标题色（minimal 是纯黑）
+    // 在深色纸张上会读不清，而二级标题继承纸张色显示为白，形成割裂。
+    record(
+      '深色下一级标题颜色够亮（不再照主题写死的深色）',
+      luminance(paper.h1) > 150,
+      `  一级标题颜色=${paper.h1} 亮度=${luminance(paper.h1).toFixed(0)}（要求 >150）`,
+    );
+    record(
+      '深色下一级与二级标题同色',
+      paper.h1 === paper.h2,
+      `  一级=${paper.h1} 二级=${paper.h2}`,
     );
   } catch (e) {
     record('深色下纸张可读性可测量', false, `  ${e.message.split('\n')[0]}`);

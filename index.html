@@ -120,6 +120,26 @@
       }
 
       /*
+        深色下各级标题统一跟随纸张文字色。
+        各主题的 h1 / h2 都是照着「白纸」写的，常见做法是直接给标题写死一个深色
+        （minimal 的一级标题是纯黑，epic / elegant / ancient 是深棕或深紫，
+        fresh 是深蓝）。这些颜色落在深色纸张上，轻则发闷、重则读不清；
+        而二级标题常常没写 color、继承纸张文字色而显示为白，
+        于是出现「一级标题黑、二级标题白」的割裂。
+        这里把一到六级标题统一到纸张文字色，深浅一致。
+        与上面一样，只影响编辑区的书写面；导出的 EPUB 与「样式主题」预览
+        仍按主题原样渲染。
+      */
+      html.dark .editor-paper h1,
+      html.dark .editor-paper h2,
+      html.dark .editor-paper h3,
+      html.dark .editor-paper h4,
+      html.dark .editor-paper h5,
+      html.dark .editor-paper h6 {
+        color: #e5e5e5;
+      }
+
+      /*
         深色下，书稿里「浅底抠色」的元素都要改成深色纸张色。
         各主题的分割线装饰用 `background:#fff`（或自身浅纸色）在线上挖出断口，
         块引用 / 目录链接也带浅底（如 classic 的 blockquote #fafafa、fresh 的 .toc-link #fff）。
