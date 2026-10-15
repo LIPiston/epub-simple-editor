@@ -3,10 +3,10 @@ import { Chapter } from '../../types';
 import {
   ArrowDown,
   ArrowUp,
-  BookmarkCheck,
-  BookmarkX,
   Combine,
   CheckSquare,
+  Eye,
+  EyeOff,
   Heading1,
   Heading2,
   Pencil,
@@ -134,22 +134,6 @@ const ChapterItem: React.FC<ChapterItemProps> = ({
             >
               {chapter.title || '无标题章节'}
             </span>
-
-            {/* 目录开关：常驻显示，因为它直接决定这一章会不会出现在导出目录里 */}
-            <button
-              onClick={(event) => {
-                event.stopPropagation();
-                onToggleToc(idx);
-              }}
-              className={`shrink-0 rounded-sm p-0.5 transition-colors ${
-                isIncludedInToc
-                  ? 'text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900'
-                  : 'text-gray-300 hover:bg-gray-200 hover:text-gray-500 dark:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-400'
-              }`}
-              title={isIncludedInToc ? '已加入目录，点击排除' : '已排除目录，点击加入'}
-            >
-              {isIncludedInToc ? <BookmarkCheck size={14} /> : <BookmarkX size={14} />}
-            </button>
           </div>
 
           <div className="mt-px flex min-w-0 items-center gap-1.5 text-[11px] leading-4 text-gray-400 dark:text-gray-500">
@@ -160,18 +144,26 @@ const ChapterItem: React.FC<ChapterItemProps> = ({
                 <span>{chapter.subItems.length} 个小标题</span>
               </>
             )}
-            {!isIncludedInToc && (
-              <>
-                <span className="text-gray-300 dark:text-gray-600">·</span>
-                <span className="truncate">不导出到目录</span>
-              </>
-            )}
+            <span className="text-gray-300 dark:text-gray-600">·</span>
+            <span className={`truncate ${isIncludedInToc ? '' : 'text-orange-600 dark:text-orange-400'}`}>
+              {isIncludedInToc ? '已加入目录' : '不导出到目录'}
+            </span>
           </div>
         </div>
 
         {/* 操作区：悬停或键盘聚焦时才出现，平时让出空间给标题 */}
         {!selectionMode && (
           <div className="absolute right-1 top-1 flex items-center gap-px rounded-md border border-gray-200 bg-white p-0.5 opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 dark:border-gray-700 dark:bg-gray-800">
+            {/* 目录开关：放在操作区最左，避免被右侧按钮挤掉；状态另有常驻文字 */}
+            <RowAction
+              icon={isIncludedInToc ? <Eye size={13} /> : <EyeOff size={13} />}
+              title={isIncludedInToc ? '已加入目录，点击排除' : '已排除目录，点击加入'}
+              highlight={isIncludedInToc}
+              onClick={(event) => {
+                event.stopPropagation();
+                onToggleToc(idx);
+              }}
+            />
             {idx < totalChapters - 1 && (
               <RowAction
                 icon={<Combine size={13} />}
@@ -238,13 +230,19 @@ const RowAction: React.FC<{
   icon: React.ReactNode;
   title: string;
   disabled?: boolean;
+  /** 高亮成「开启」态（如已加入目录），用来区分二值状态的一侧 */
+  highlight?: boolean;
   onClick: (event: React.MouseEvent) => void;
-}> = ({ icon, title, disabled = false, onClick }) => (
+}> = ({ icon, title, disabled = false, highlight = false, onClick }) => (
   <button
     onMouseDown={(event) => event.preventDefault()}
     onClick={onClick}
     disabled={disabled}
-    className="inline-flex h-5 w-5 items-center justify-center rounded-sm text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-30 dark:text-gray-500 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+    className={`inline-flex h-5 w-5 items-center justify-center rounded-sm transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
+      highlight
+        ? 'text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900'
+        : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-500 dark:hover:bg-gray-700 dark:hover:text-gray-200'
+    }`}
     title={title}
   >
     {icon}
