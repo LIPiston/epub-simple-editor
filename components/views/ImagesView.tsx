@@ -112,7 +112,7 @@ const ImageCard: React.FC<{
     {!selectionMode && (
       <button
         onClick={(e) => { e.stopPropagation(); onDelete(image.id); }}
-        className="absolute top-1 right-1 z-10 p-1 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 dark:bg-red-500 dark:hover:bg-red-600"
+        className="hover-reveal absolute top-1 right-1 z-10 p-1 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 dark:bg-red-500 dark:hover:bg-red-600"
         title="删除图片"
         aria-label="删除图片"
       >

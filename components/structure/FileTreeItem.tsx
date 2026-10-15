@@ -79,8 +79,9 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
             )}
         </span>
 
-        {/* Inline Actions (Rename/Delete) */}
-        <div className={`flex items-center space-x-0.5 ml-1 ${selectedId === node.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
+        {/* Inline Actions (Rename/Delete)
+            悬停才出现；触摸设备没有悬停，靠 .hover-reveal 保持常显 */}
+        <div className={`hover-reveal flex items-center space-x-0.5 ml-1 ${selectedId === node.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
              {node.canRename && (
                  <button
                     onClick={(e) => { e.stopPropagation(); onRename(node); }}

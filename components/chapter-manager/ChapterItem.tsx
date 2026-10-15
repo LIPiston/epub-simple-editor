@@ -115,6 +115,8 @@ const ChapterItem: React.FC<ChapterItemProps> = ({
             {batchSelected ? <CheckSquare size={15} /> : <Square size={15} />}
           </button>
         ) : (
+          // 拖拽手柄不参与「触摸端常显」：HTML5 拖放不会由触摸触发，
+          // 显出一个拖不动的手柄只会误导。触摸端用行内「上移 / 下移」排序。
           <DragHandle className="mt-0.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 dark:text-gray-500 dark:hover:text-gray-300" />
         )}
 
@@ -151,9 +153,10 @@ const ChapterItem: React.FC<ChapterItemProps> = ({
           </div>
         </div>
 
-        {/* 操作区：悬停或键盘聚焦时才出现，平时让出空间给标题 */}
+        {/* 操作区：悬停或键盘聚焦时才出现，平时让出空间给标题。
+            触摸设备没有悬停，由 index.html 的 .hover-reveal 规则强制常显。 */}
         {!selectionMode && (
-          <div className="absolute right-1 top-1 flex items-center gap-px rounded-md border border-gray-200 bg-white p-0.5 opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 dark:border-gray-700 dark:bg-gray-800">
+          <div className="hover-reveal absolute right-1 top-1 flex items-center gap-px rounded-md border border-gray-200 bg-white p-0.5 opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 dark:border-gray-700 dark:bg-gray-800">
             {/* 目录开关：放在操作区最左，避免被右侧按钮挤掉；状态另有常驻文字 */}
             <RowAction
               icon={isIncludedInToc ? <Eye size={13} /> : <EyeOff size={13} />}
