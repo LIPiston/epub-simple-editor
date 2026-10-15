@@ -14,7 +14,8 @@
     "test:pill": "node scripts/test-autosave-pill.mjs",
     "test:library": "node scripts/test-library.mjs",
     "test:nav": "node scripts/test-navigation.mjs",
-    "test:theme": "node scripts/test-theme.mjs"
+    "test:theme": "node scripts/test-theme.mjs",
+    "test:toc-toggle": "node scripts/test-chapter-toc-toggle.mjs"
   },
   "dependencies": {
     "@tiptap/extension-heading": "^3.20.1",
