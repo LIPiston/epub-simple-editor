@@ -110,15 +110,15 @@ const ChaptersView: React.FC<{
       {/* 拖拽分割条：仅桌面端显示 */}
       {!isMobile && (
         <div
-          className={`hidden md:flex items-center justify-center w-1 bg-gray-200/50 hover:bg-blue-400 transition-colors cursor-col-resize group relative ${
-            isDragging ? 'bg-blue-500' : ''
+          className={`hidden md:flex items-center justify-center w-1 bg-gray-200/50 hover:bg-orange-400 transition-colors cursor-col-resize group relative dark:bg-gray-700/50 ${
+            isDragging ? 'bg-orange-500' : ''
           }`}
           onMouseDown={handleMouseDown}
         >
           <div className="absolute inset-y-0 -left-1 -right-1" />
           <GripVertical
             size={16}
-            className={`text-gray-400 group-hover:text-white transition-colors ${
+            className={`text-gray-400 dark:text-gray-500 group-hover:text-white transition-colors ${
               isDragging ? 'text-white' : ''
             }`}
           />
@@ -142,7 +142,7 @@ const ChaptersView: React.FC<{
             onMobileBack={onMobileBack}
           />
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 text-gray-400">
+          <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 text-gray-400 dark:bg-gray-900 dark:text-gray-500">
             <BookOpen size={48} className="mb-4" />
             <p>请从左侧选择一个章节开始编辑</p>
           </div>

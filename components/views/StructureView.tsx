@@ -454,7 +454,7 @@ const StructureView: React.FC<StructureViewProps> = ({ project, onUpdateProject 
     };
 
     return (
-        <div className="flex h-full bg-[#F5F5F7] overflow-hidden">
+        <div className="flex h-full bg-gray-50 overflow-hidden dark:bg-gray-900">
             <FileTree
                 displayedNodes={displayedNodes}
                 selectedNodeId={selectedNodeId}

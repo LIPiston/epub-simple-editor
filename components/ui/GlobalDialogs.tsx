@@ -49,33 +49,33 @@ const GlobalDialogs: React.FC = () => {
                 <div key={d.id} className={`absolute inset-0 flex items-center justify-center p-4 transition-all duration-200 ${d.isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
                     {/* Backdrop */}
                     <div
-                        className="absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity"
+                        className="absolute inset-0 bg-black/20 transition-opacity"
                         onClick={() => d.type === 'alert' ? closeDialog(d.id, true) : closeDialog(d.id, false)}
                     />
 
                     {/* Dialog Box */}
                     <div
-                        className={`relative bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col transition-all duration-300 transform ${d.isOpen ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'}`}
+                        className={`relative bg-white rounded-lg border border-gray-200 w-full max-w-sm overflow-hidden flex flex-col transition-all duration-300 transform dark:bg-gray-900 dark:border-gray-800 ${d.isOpen ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'}`}
                         style={{ zIndex: 1000 + index }}
                         onClick={e => e.stopPropagation()}
                     >
-                        <div className="p-6">
-                            {d.title && <h3 className="text-lg font-bold text-gray-900 mb-2">{d.title}</h3>}
-                            <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{d.message}</p>
+                        <div className="p-4">
+                            {d.title && <h3 className="text-sm font-semibold text-gray-900 mb-1.5 dark:text-gray-100">{d.title}</h3>}
+                            <p className="text-[13px] text-gray-600 leading-relaxed whitespace-pre-wrap dark:text-gray-400">{d.message}</p>
                         </div>
 
-                        <div className="flex border-t border-gray-100 bg-gray-50/50">
+                        <div className="flex border-t border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900">
                             {d.type === 'confirm' && (
                                 <button
                                     onClick={() => closeDialog(d.id, false)}
-                                    className="flex-1 py-3.5 text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors border-r border-gray-100"
+                                    className="flex-1 py-2.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors border-r border-gray-200 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800 dark:border-gray-800"
                                 >
                                     {d.cancelText || '取消'}
                                 </button>
                             )}
                             <button
                                 onClick={() => closeDialog(d.id, true)}
-                                className={`flex-1 py-3.5 text-sm font-bold transition-colors ${d.type === 'alert' ? 'text-blue-600 hover:text-blue-700 hover:bg-blue-50' : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'} ${d.type === 'alert' ? 'w-full' : ''}`}
+                                className={`flex-1 py-2.5 text-xs font-semibold transition-colors ${d.type === 'alert' ? 'text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:text-gray-300 dark:hover:text-gray-200 dark:hover:bg-gray-800' : 'text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:text-gray-300 dark:hover:text-gray-200 dark:hover:bg-gray-800'} ${d.type === 'alert' ? 'w-full' : ''}`}
                                 autoFocus
                             >
                                 {d.confirmText || '确定'}

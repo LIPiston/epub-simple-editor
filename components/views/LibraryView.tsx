@@ -128,37 +128,40 @@ const LibraryView: React.FC<LibraryViewProps> = ({
   };
 
   return (
-    <div className="flex h-full flex-col bg-[#F5F5F7] overflow-hidden">
-      {/* 顶部：标题 + 操作 */}
-      <div className="flex-none bg-white/80 backdrop-blur-md border-b border-gray-200/60 px-4 md:px-8 py-4 md:py-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/25">
-              <LibraryIcon size={20} />
-            </div>
-            <div>
-              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900">书籍管理</h1>
-              <p className="text-xs text-gray-400 mt-0.5">
-                共 {books.length} 本 · 点击「打开」进入章节管理
-              </p>
-            </div>
-          </div>
+    <div className="flex h-full flex-col bg-gray-50 overflow-hidden dark:bg-gray-900">
+      {/* 紧凑工具栏：标题 + 计数 + 搜索 + 操作 */}
+      <div className="flex-none border-b border-gray-200 bg-white px-3 py-2 dark:border-gray-800 dark:bg-gray-900">
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-sm font-semibold text-gray-900 dark:text-gray-100">书籍管理</h1>
+          <span className="text-xs text-gray-400 dark:text-gray-500">共 {books.length} 本</span>
 
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            {books.length > 0 && (
+              <div className="relative">
+                <Search size={13} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="搜索书名或作者…"
+                  className="h-7 w-44 rounded-md border border-gray-200 bg-white pl-7 pr-2 text-xs text-gray-700 outline-none transition-colors focus:border-orange-400 focus:ring-1 focus:ring-orange-400/40 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:placeholder:text-gray-500"
+                />
+              </div>
+            )}
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 hover:border-blue-300 hover:text-blue-600 text-gray-600 px-3.5 py-2.5 text-sm font-medium transition-colors shadow-sm"
+              className="inline-flex h-7 items-center gap-1.5 rounded-md border border-gray-200 bg-white px-2.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-orange-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
               title="导入 EPUB / TXT / HTML 为一个新书"
             >
-              <FileUp size={16} />
+              <FileUp size={14} />
               <span className="hidden sm:inline">导入新书</span>
             </button>
             <button
               onClick={() => onCreateBook()}
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2.5 text-sm font-semibold transition-colors shadow-lg shadow-blue-500/20"
+              className="inline-flex h-7 items-center gap-1.5 rounded-md bg-orange-600 px-2.5 text-xs font-semibold text-white transition-colors hover:bg-orange-700 dark:bg-gray-600 dark:hover:bg-gray-500"
               title="新建一本空白书"
             >
-              <BookPlus size={16} />
+              <BookPlus size={14} />
               <span className="hidden sm:inline">新建空白书</span>
             </button>
             <input
@@ -171,33 +174,19 @@ const LibraryView: React.FC<LibraryViewProps> = ({
             />
           </div>
         </div>
-
-        {/* 搜索 */}
-        {books.length > 0 && (
-          <div className="mt-4 relative max-w-md">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="搜索书名或作者…"
-              className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 transition-all"
-            />
-          </div>
-        )}
       </div>
 
-      {/* 书目列表 */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-5">
+      {/* 书目：密集列表 */}
+      <div className="flex-1 overflow-y-auto p-3">
         {books.length === 0 ? (
           <EmptyState onImport={() => fileInputRef.current?.click()} onCreate={() => onCreateBook()} />
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-            <Search size={36} className="mb-3 opacity-40" />
-            <p className="text-sm">没有匹配「{searchTerm}」的书籍</p>
+          <div className="flex flex-col items-center justify-center py-8 text-gray-400 dark:text-gray-500">
+            <Search size={20} className="mb-2 opacity-40" />
+            <p className="text-xs">没有匹配「{searchTerm}」的书籍</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="divide-y divide-gray-200 overflow-hidden rounded-md border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900">
             {filtered.map((book) => {
               const isActive = book.id === activeBookId;
               const isPending = pendingId === book.id;
@@ -206,25 +195,18 @@ const LibraryView: React.FC<LibraryViewProps> = ({
               return (
                 <div
                   key={book.id}
-                  className={`group relative flex flex-col rounded-2xl border bg-white p-4 transition-all ${
+                  data-book-card={book.id}
+                  className={`group flex items-start gap-2.5 border-l-2 px-3 py-2 transition-colors ${
                     isActive
-                      ? 'border-blue-300 ring-2 ring-blue-500/15 shadow-lg shadow-blue-500/5'
-                      : 'border-gray-200 hover:border-blue-200 hover:shadow-lg hover:shadow-gray-200/60'
+                      ? 'border-orange-600 bg-orange-50 dark:border-gray-600 dark:bg-gray-700'
+                      : 'border-transparent hover:bg-gray-50 dark:hover:bg-gray-800'
                   }`}
                 >
-                  {/* 当前书本标记 */}
-                  {isActive && (
-                    <span className="absolute -top-2 left-4 px-2 py-0.5 text-[10px] font-bold text-white bg-blue-600 rounded-full shadow-sm">
-                      当前编辑
-                    </span>
-                  )}
+                  <Book size={14} className="mt-1 flex-none text-gray-400 dark:text-gray-500" />
 
-                  <div className="flex items-start gap-3">
-                    <div className="w-11 h-14 flex-none rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 flex items-center justify-center text-slate-400 shadow-inner">
-                      <Book size={20} />
-                    </div>
-
-                    <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
+                    {/* 第一行：书名 + 状态 + 操作 */}
+                    <div className="flex items-center gap-2">
                       {isRenaming ? (
                         <input
                           autoFocus
@@ -235,56 +217,68 @@ const LibraryView: React.FC<LibraryViewProps> = ({
                             if (e.key === 'Enter') void commitRename();
                             if (e.key === 'Escape') setRenamingId(null);
                           }}
-                          className="w-full text-sm font-bold text-gray-900 bg-white border border-blue-400 rounded-lg px-2 py-1 outline-none ring-2 ring-blue-500/20"
+                          className="min-w-0 flex-1 rounded-sm border border-orange-400 bg-white px-1.5 py-0.5 text-[13px] font-semibold text-gray-900 outline-none ring-1 ring-orange-400/30 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                         />
                       ) : (
                         <h3
-                          className="text-sm font-bold text-gray-900 truncate"
+                          className="min-w-0 flex-1 truncate text-[13px] font-semibold text-gray-900 dark:text-gray-100"
                           title={book.title}
                           onDoubleClick={() => startRename(book)}
                         >
                           {book.title}
                         </h3>
                       )}
-                      <p className="text-xs text-gray-400 truncate mt-0.5">{book.author}</p>
 
-                      <div className="flex items-center gap-3 mt-2 text-[11px] text-gray-400">
-                        <span>{book.chapterCount} 章</span>
-                        <span>{book.imageCount} 图</span>
-                        <span>{formatSize(book.sizeBytes)}</span>
+                      {isActive && (
+                        <span className="flex-none rounded-sm bg-orange-100 px-1.5 py-0.5 text-[10px] font-medium text-orange-700 dark:bg-gray-700 dark:text-gray-200">
+                          当前编辑
+                        </span>
+                      )}
+
+                      <div className="ml-auto flex flex-none items-center gap-1">
+                        <button
+                          onClick={() => handleOpen(book.id)}
+                          disabled={isPending}
+                          className="inline-flex h-6 items-center gap-1 rounded-md border border-gray-200 bg-white px-2 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-orange-600 disabled:opacity-60 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+                          title="打开并进入章节管理"
+                        >
+                          {isPending ? <Loader2 size={12} className="animate-spin" /> : <ArrowRight size={12} />}
+                          {isPending ? '打开中…' : '打开'}
+                        </button>
+
+                        <IconAction
+                          icon={<Copy size={12} />}
+                          title="复制这本书"
+                          onClick={() => onDuplicateBook(book.id)}
+                        />
+                        <IconAction
+                          icon={<Pencil size={12} />}
+                          title="重命名"
+                          onClick={() => startRename(book)}
+                        />
+                        <IconAction
+                          icon={<Trash2 size={12} />}
+                          title="删除"
+                          danger
+                          onClick={() => handleDelete(book)}
+                        />
                       </div>
-                      <p className="text-[10px] text-gray-300 mt-1">更新于 {formatTime(book.updatedAt)}</p>
                     </div>
-                  </div>
 
-                  {/* 操作区 */}
-                  <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-gray-100">
-                    <button
-                      onClick={() => handleOpen(book.id)}
-                      disabled={isPending}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-2 text-xs font-bold transition-colors disabled:opacity-60"
-                      title="打开并进入章节管理"
-                    >
-                      {isPending ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
-                      {isPending ? '打开中…' : '打开'}
-                    </button>
-
-                    <IconAction
-                      icon={<Copy size={14} />}
-                      title="复制这本书"
-                      onClick={() => onDuplicateBook(book.id)}
-                    />
-                    <IconAction
-                      icon={<Pencil size={14} />}
-                      title="重命名"
-                      onClick={() => startRename(book)}
-                    />
-                    <IconAction
-                      icon={<Trash2 size={14} />}
-                      title="删除"
-                      danger
-                      onClick={() => handleDelete(book)}
-                    />
+                    {/* 第二行：作者 + 元信息 */}
+                    <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[11px] text-gray-400 dark:text-gray-500">
+                      {book.author && (
+                        <>
+                          <span className="truncate">{book.author}</span>
+                          <span className="text-gray-300 dark:text-gray-600">·</span>
+                        </>
+                      )}
+                      <span className="flex-none">{book.chapterCount} 章</span>
+                      <span className="flex-none">{book.imageCount} 图</span>
+                      <span className="flex-none">{formatSize(book.sizeBytes)}</span>
+                      <span className="text-gray-300 dark:text-gray-600">·</span>
+                      <span className="truncate">更新于 {formatTime(book.updatedAt)}</span>
+                    </div>
                   </div>
                 </div>
               );
@@ -296,7 +290,7 @@ const LibraryView: React.FC<LibraryViewProps> = ({
   );
 };
 
-/** 卡片右侧的小圆形操作按钮 */
+/** 列表行右侧的小方形操作按钮 */
 const IconAction: React.FC<{
   icon: React.ReactNode;
   title: string;
@@ -306,10 +300,10 @@ const IconAction: React.FC<{
   <button
     onClick={onClick}
     title={title}
-    className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-colors ${
+    className={`inline-flex h-6 w-6 items-center justify-center rounded-md border border-gray-200 bg-white transition-colors dark:border-gray-700 dark:bg-gray-700 ${
       danger
-        ? 'border-gray-200 text-gray-400 hover:text-red-600 hover:border-red-200 hover:bg-red-50'
-        : 'border-gray-200 text-gray-400 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50'
+        ? 'text-gray-400 hover:border-red-200 hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:border-red-800 dark:hover:bg-red-950 dark:hover:text-red-400'
+        : 'text-gray-400 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600 dark:text-gray-500 dark:hover:border-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-300'
     }`}
   >
     {icon}
@@ -318,28 +312,26 @@ const IconAction: React.FC<{
 
 /** 空书库的引导 */
 const EmptyState: React.FC<{ onImport: () => void; onCreate: () => void }> = ({ onImport, onCreate }) => (
-  <div className="flex flex-col items-center justify-center py-16 md:py-24 text-center">
-    <div className="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-500 mb-5">
-      <LibraryIcon size={36} />
-    </div>
-    <h2 className="text-lg font-bold text-gray-800">书库还是空的</h2>
-    <p className="text-sm text-gray-400 mt-2 max-w-sm leading-relaxed">
+  <div className="flex flex-col items-center justify-center py-8 text-center">
+    <LibraryIcon size={22} className="mb-2 text-gray-300 dark:text-gray-600" />
+    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">书库还是空的</p>
+    <p className="mt-1 max-w-sm text-xs leading-relaxed text-gray-400 dark:text-gray-500">
       导入一个 EPUB / TXT / HTML 文件，或直接新建一本空白书开始创作。
       之后每本书都独立保存，切换书时无需再重复导入导出。
     </p>
-    <div className="flex items-center gap-3 mt-6">
+    <div className="mt-3 flex items-center gap-2">
       <button
         onClick={onImport}
-        className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 hover:border-blue-300 hover:text-blue-600 text-gray-600 px-4 py-2.5 text-sm font-medium transition-colors shadow-sm"
+        className="inline-flex h-7 items-center gap-1.5 rounded-md border border-gray-200 bg-white px-2.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-orange-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
       >
-        <FileUp size={16} />
+        <FileUp size={14} />
         导入文件
       </button>
       <button
         onClick={onCreate}
-        className="inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 text-sm font-semibold transition-colors shadow-lg shadow-blue-500/20"
+        className="inline-flex h-7 items-center gap-1.5 rounded-md bg-orange-600 px-2.5 text-xs font-semibold text-white transition-colors hover:bg-orange-700 dark:bg-gray-600 dark:hover:bg-gray-500"
       >
-        <BookPlus size={16} />
+        <BookPlus size={14} />
         新建空白书
       </button>
     </div>

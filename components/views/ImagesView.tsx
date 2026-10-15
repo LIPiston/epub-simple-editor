@@ -58,35 +58,53 @@ const ImageCard: React.FC<{
 }> = ({ image, onDelete, isSelected, onToggleSelect, selectionMode, usageCount, isActive, onActivate }) => (
   <div
     onClick={() => selectionMode ? onToggleSelect(image.id) : onActivate(image.id)}
-    className={`relative group bg-white p-2 rounded-2xl border transition-all duration-300 ${isSelected
-      ? 'border-blue-500 shadow-md ring-2 ring-blue-500/20'
+    title={`${image.name} · ${image.dimensions} · ${formatBytes(image.size)} · ${usageCount} 章引用`}
+    className={`relative group bg-white p-1 rounded-md border cursor-pointer transition-colors dark:bg-gray-900 ${isSelected
+      ? 'border-orange-500 ring-1 ring-orange-500'
       : isActive
-        ? 'border-indigo-300 shadow-md ring-2 ring-indigo-200'
-        : 'border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1'
-      } ${selectionMode ? 'cursor-pointer' : 'cursor-pointer'}`}
+        ? 'border-orange-300 dark:border-gray-600'
+        : 'border-gray-200 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800'
+      }`}
   >
-    <div className={`aspect-square bg-gray-50 rounded-xl mb-2 flex items-center justify-center overflow-hidden transition-all ${isSelected ? 'opacity-90' : ''}`}>
+    <div className="aspect-square bg-gray-50 rounded-sm flex items-center justify-center overflow-hidden dark:bg-gray-800">
       <img src={image.data} alt={image.name} className="object-contain w-full h-full" />
     </div>
 
-    <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent transition-opacity duration-300 rounded-2xl pointer-events-none p-3 flex flex-col justify-end ${selectionMode ? 'opacity-100 from-black/60 via-transparent' : 'opacity-0 group-hover:opacity-100'}`}>
-      <p className="text-xs font-bold text-white truncate drop-shadow-md">{image.name}</p>
-      <div className="flex items-center text-[10px] text-white/90 mt-1 drop-shadow-md">
-        <ImageIcon size={10} className="mr-1" /> {image.dimensions}
-        <span className="mx-1.5">·</span>
-        <FileText size={10} className="mr-1" /> {formatBytes(image.size)}
-      </div>
-      <div className="mt-1 text-[10px] text-white/90 flex items-center">
-        <Link2 size={10} className="mr-1" /> {usageCount} 章引用
-      </div>
+    <div className="mt-1 flex items-center gap-1 px-0.5">
+      <p className="text-[11px] text-gray-600 truncate flex-1 dark:text-gray-400" title={image.name}>{image.name}</p>
+      {usageCount > 0 && (
+        <span
+          className="shrink-0 rounded-full bg-orange-50 text-orange-600 text-[10px] leading-none px-1.5 py-0.5 dark:bg-gray-700 dark:text-gray-300"
+          title={`被 ${usageCount} 个章节引用`}
+        >
+          {usageCount}
+        </span>
+      )}
     </div>
 
+    {/* Hover detail overlay (non-selection mode) */}
+    {!selectionMode && (
+      <div className="absolute inset-0 rounded-md bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none p-0.5 flex flex-col justify-end">
+        <div className="text-[10px] text-white/90 space-y-0.5">
+          <div className="flex items-center truncate">
+            <ImageIcon size={10} className="mr-1 shrink-0" /> {image.dimensions}
+          </div>
+          <div className="flex items-center truncate">
+            <FileText size={10} className="mr-1 shrink-0" /> {formatBytes(image.size)}
+          </div>
+          <div className="flex items-center truncate">
+            <Link2 size={10} className="mr-1 shrink-0" /> {usageCount} 章引用
+          </div>
+        </div>
+      </div>
+    )}
+
     {selectionMode && (
-      <div className="absolute top-3 left-3 z-10 drop-shadow-md">
+      <div className="absolute top-1 left-1 z-10">
         {isSelected ? (
-          <CheckCircle2 size={24} className="text-blue-500 fill-white" />
+          <CheckCircle2 size={18} className="text-orange-500 fill-white" />
         ) : (
-          <Circle size={24} className="text-white/80 hover:text-white" />
+          <Circle size={18} className="text-white/80 hover:text-white" />
         )}
       </div>
     )}
@@ -94,17 +112,19 @@ const ImageCard: React.FC<{
     {!selectionMode && (
       <button
         onClick={(e) => { e.stopPropagation(); onDelete(image.id); }}
-        className="absolute -top-2 -right-2 bg-red-500 text-white p-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all hover:scale-110 active:scale-95 z-10"
+        className="absolute top-1 right-1 z-10 p-1 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 dark:bg-red-500 dark:hover:bg-red-600"
+        title="删除图片"
+        aria-label="删除图片"
       >
-        <Trash2 size={14} />
+        <Trash2 size={12} />
       </button>
     )}
   </div>
 );
 
 const SkeletonCard: React.FC = () => (
-  <div className="bg-white p-2 rounded-2xl border border-gray-100 shadow-sm animate-pulse">
-    <div className="aspect-square bg-gray-200 rounded-xl"></div>
+  <div className="bg-white p-1 rounded-md border border-gray-200 animate-pulse dark:bg-gray-900 dark:border-gray-800">
+    <div className="aspect-square bg-gray-100 rounded-sm dark:bg-gray-700"></div>
   </div>
 );
 
@@ -260,149 +280,148 @@ const ImagesView: React.FC<ImagesViewProps> = ({ images, chapters, onUpdateImage
   };
 
   return (
-    <div className="p-4 md:p-8 h-full bg-[#F5F5F7] overflow-y-auto" onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-3">
-          图片素材
+    <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900" onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}>
+      {/* Compact sticky toolbar */}
+      <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-gray-200 bg-white px-3 py-2 dark:border-gray-800 dark:bg-gray-900">
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">图片素材</h2>
+        <span className="text-xs text-gray-400 dark:text-gray-500">{images.length} 张</span>
+
+        <div className="ml-auto flex items-center gap-1.5">
           {images.length > 0 && (
             <button
               onClick={toggleSelectionMode}
-              className={`text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors ${isSelectionMode
-                ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
+              className={`h-7 px-2.5 text-xs rounded-md border transition-colors ${isSelectionMode
+                ? 'border-orange-500 bg-orange-50 text-orange-700 dark:bg-gray-700 dark:text-gray-200'
+                : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600'
                 }`}
             >
               {isSelectionMode ? '退出多选' : '批量管理'}
             </button>
           )}
-        </h2>
 
-        <div className="flex items-center gap-3">
           {isSelectionMode ? (
             <>
               <button
                 onClick={toggleSelectAll}
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 bg-white px-3 py-1.5 rounded-lg border border-gray-200 transition-colors"
+                className="h-7 px-2.5 text-xs rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
               >
                 {selectedIds.size === images.length ? '取消全选' : '全选'}
               </button>
               <button
                 onClick={handleBulkDelete}
                 disabled={selectedIds.size === 0}
-                className={`text-sm font-medium px-3 py-1.5 rounded-lg flex items-center transition-colors ${selectedIds.size > 0
-                  ? 'bg-red-500 text-white hover:bg-red-600 shadow-sm'
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                className={`h-7 px-2.5 text-xs rounded-md flex items-center transition-colors ${selectedIds.size > 0
+                  ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600'
+                  : 'border border-gray-200 bg-white text-gray-400 cursor-not-allowed dark:border-gray-700 dark:bg-gray-800 dark:text-gray-600'
                   }`}
               >
-                <Trash2 size={16} className="mr-1.5" />
+                <Trash2 size={12} className="mr-1" />
                 删除 ({selectedIds.size})
               </button>
             </>
           ) : (
-            <>
+            images.length > 0 && (
               <button
                 onClick={handleBulkRename}
-                className="flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors"
+                className="h-7 px-2.5 text-xs rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors flex items-center gap-1 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
                 title="将所有图片重命名为 img_001, img_002, ..."
               >
-                <RefreshCw size={16} />
+                <RefreshCw size={12} />
                 批量重命名
               </button>
-              <span className="text-xs md:text-sm font-medium text-gray-400 bg-white px-3 py-1 rounded-full border border-gray-200">{images.length} 张图片</span>
-            </>
+            )
           )}
         </div>
       </div>
 
-      {!isSelectionMode && (
-        <div
-          onClick={() => fileInputRef.current?.click()}
-          className={`relative w-full p-8 rounded-3xl mb-8 flex flex-col items-center justify-center border-2 border-dashed transition-all duration-300 cursor-pointer group ${dragActive ? 'border-blue-500 bg-blue-50 scale-[1.02]' : 'border-gray-300 hover:border-blue-400 bg-white'}`}
-        >
-          <div className={`absolute inset-0 bg-white transition-opacity ${dragActive ? 'opacity-50' : 'opacity-0'}`}></div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={handleUploadClick}
-          />
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 mb-4 ${dragActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500 group-hover:bg-blue-50 group-hover:text-blue-500'}`}>
-            <UploadCloud size={32} />
+      <div className="flex-1 overflow-y-auto">
+        {/* Compact dropzone strip */}
+        {!isSelectionMode && (
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className={`m-3 mb-0 h-16 rounded-md border border-dashed flex items-center justify-center gap-2 cursor-pointer transition-colors ${dragActive ? 'border-orange-500 bg-orange-50 dark:border-gray-600 dark:bg-gray-700' : 'border-gray-300 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:hover:bg-gray-800'}`}
+            title="拖拽或点击上传图片"
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handleUploadClick}
+            />
+            <UploadCloud size={16} className={dragActive ? 'text-orange-500 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'} />
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {dragActive ? '释放以上传图片' : <>拖拽图片到此处，或 <span className="text-orange-600 dark:text-gray-300">点击浏览文件</span></>}
+            </p>
           </div>
-          <p className="text-lg font-semibold text-gray-700">{dragActive ? '释放以上传图片' : '拖拽图片到此处'}</p>
-          <p className="text-sm text-gray-500 mt-1">或 <span className="text-blue-600 font-medium">点击浏览文件</span></p>
-        </div>
-      )}
+        )}
 
-      {activeUsage && !isSelectionMode && (
-        <div className="mb-8 rounded-3xl border border-indigo-100 bg-white p-5 shadow-sm">
-          <div className="flex flex-col md:flex-row gap-5">
-            <div className="w-full md:w-40 aspect-square rounded-2xl overflow-hidden bg-gray-50 border border-gray-100">
-              <img src={activeUsage.image.data} alt={activeUsage.image.name} className="w-full h-full object-contain" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <h3 className="text-lg font-bold text-gray-900 truncate">{activeUsage.image.name}</h3>
-                  <div className="mt-1 text-sm text-gray-500">
-                    {activeUsage.image.dimensions} · {formatBytes(activeUsage.image.size)}
-                  </div>
+        {/* Compact active-image usage info block */}
+        {activeUsage && !isSelectionMode && (
+          <div className="mx-3 mt-3 rounded-md border border-gray-200 bg-white p-2.5 dark:border-gray-800 dark:bg-gray-900">
+            <div className="flex gap-2.5">
+              <div className="w-16 h-16 shrink-0 rounded-md overflow-hidden bg-gray-50 border border-gray-200 dark:bg-gray-800 dark:border-gray-800">
+                <img src={activeUsage.image.data} alt={activeUsage.image.name} className="w-full h-full object-contain" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-[13px] font-medium text-gray-900 truncate dark:text-gray-100" title={activeUsage.image.name}>{activeUsage.image.name}</h3>
+                  <span className="shrink-0 rounded-full bg-orange-50 text-orange-600 text-[10px] px-1.5 py-0.5 dark:bg-gray-700 dark:text-gray-300">
+                    {activeUsage.usageCount} 章引用
+                  </span>
                 </div>
-                <div className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">
-                  {activeUsage.usageCount} 章引用
+                <div className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
+                  {activeUsage.image.dimensions} · {formatBytes(activeUsage.image.size)}
+                </div>
+                <div className="mt-1.5">
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1 dark:text-gray-500">引用章节</div>
+                  {activeUsage.chapters.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {activeUsage.chapters.map(chapter => (
+                        <button
+                          key={`${activeUsage.image.id}-${chapter.chapterId}`}
+                          onClick={() => onLocateUsage(chapter.chapterId, activeUsage.image.id)}
+                          className="rounded-md border border-gray-200 bg-white px-1.5 py-0.5 text-[11px] text-gray-600 hover:bg-gray-50 hover:text-orange-600 transition-colors flex items-center dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+                        >
+                          <LocateFixed size={10} className="mr-1 shrink-0" />
+                          <span className="truncate max-w-[160px]">{chapter.chapterTitle}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-[11px] text-gray-400 dark:text-gray-500">这张图片目前没有被章节引用，可以安全删除。</div>
+                  )}
                 </div>
               </div>
-              <div className="mt-4">
-                <div className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">引用章节</div>
-                {activeUsage.chapters.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {activeUsage.chapters.map(chapter => (
-                      <button
-                        key={`${activeUsage.image.id}-${chapter.chapterId}`}
-                        onClick={() => onLocateUsage(chapter.chapterId, activeUsage.image.id)}
-                        className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition-colors flex items-center"
-                      >
-                        <LocateFixed size={12} className="mr-1.5" />
-                        {chapter.chapterTitle}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-500">
-                    这张图片目前没有被章节引用，可以安全删除。
-                  </div>
-                )}
-              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {images.length === 0 && loadingFiles.length === 0 && (
-        <div className="text-center py-16">
-          <p className="text-gray-400">暂无图片素材</p>
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4 md:gap-6">
-        {imageUsages.map((usage) => (
-          <ImageCard
-            key={usage.image.id}
-            image={usage.image}
-            onDelete={handleDelete}
-            isSelected={selectedIds.has(usage.image.id)}
-            onToggleSelect={toggleSelect}
-            selectionMode={isSelectionMode}
-            usageCount={usage.usageCount}
-            isActive={activeUsage?.image.id === usage.image.id}
-            onActivate={setActiveImageId}
-          />
-        ))}
-        {loadingFiles.map((id) => (
-          <SkeletonCard key={id} />
-        ))}
+        {images.length === 0 && loadingFiles.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-xs text-gray-400 dark:text-gray-500">暂无图片素材</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(112px,1fr))] gap-2 p-3">
+            {imageUsages.map((usage) => (
+              <ImageCard
+                key={usage.image.id}
+                image={usage.image}
+                onDelete={handleDelete}
+                isSelected={selectedIds.has(usage.image.id)}
+                onToggleSelect={toggleSelect}
+                selectionMode={isSelectionMode}
+                usageCount={usage.usageCount}
+                isActive={activeUsage?.image.id === usage.image.id}
+                onActivate={setActiveImageId}
+              />
+            ))}
+            {loadingFiles.map((id) => (
+              <SkeletonCard key={id} />
+            ))}
+          </div>
+        )}
       </div>
     </div >
   );
