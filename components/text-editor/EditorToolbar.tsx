@@ -367,9 +367,17 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
             <Scissors size={13} className="md:mr-1.5" />
             <span className="hidden md:inline">拆分</span>
           </button>
+        </div>
 
-          {/* "更多"按钮 - 移动端 */}
-          <div className="sm:hidden ml-0.5" ref={moreRef}>
+        {/*
+          右侧固定区：不参与横向滚动。
+          「更多工具」原先放在可滚动的那条里，320px 手机上工具栏内容比可视宽度
+          多出 80px，它正好被推到屏幕右缘之外——窄屏唯一的入口反而点不到。
+          挪到这里后，无论多窄都始终可达。
+        */}
+        <div className="flex items-center flex-shrink-0 ml-2 pl-2 border-l border-gray-200 dark:border-gray-800">
+          {/* "更多"按钮 - 移动端 / 平板（桌面端这些工具已平铺在工具栏上）*/}
+          <div className="sm:hidden mr-0.5" ref={moreRef}>
             <button
               onClick={() => setShowMoreMenu((v) => !v)}
               className={`p-1.5 rounded-lg transition-colors ${
@@ -380,10 +388,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               <MoreHorizontal size={18} />
             </button>
           </div>
-        </div>
 
-        {/* 查找按钮（固定在右侧）*/}
-        <div className="flex items-center flex-shrink-0 ml-2 pl-2 border-l border-gray-200 dark:border-gray-800">
           <button
             onClick={() => onToggleFindBar(!showFindBar)}
             className={`p-1.5 md:p-2 rounded-lg transition-colors ${
