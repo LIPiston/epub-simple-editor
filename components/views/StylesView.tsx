@@ -245,133 +245,179 @@ const StylesView: React.FC<StylesViewProps> = ({ project, activeChapter, onUpdat
     const iframeSrc = `<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><style>html, body { margin: 0; padding: 0; min-height: 100%; width: 100%; box-sizing: border-box; } ${presetCss} ${safeCustomCSS} ${safeExtraCSS}</style></head><body>${previewContent}</body></html>`;
 
     return (
-        <div className="flex flex-col md:flex-row h-full bg-[#F5F5F7] relative">
-            <div className="w-full md:w-96 flex-none flex flex-col border-b md:border-b-0 md:border-r border-gray-200 bg-white p-4 md:p-6 overflow-y-auto space-y-6 md:space-y-8 z-10">
-                <div>
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-bold text-gray-800">预设主题</h2>
-                        <label className="flex items-center cursor-pointer">
-                            <span className={`mr-3 text-sm font-medium ${isPresetActive ? 'text-gray-900' : 'text-gray-400'}`}>
-                                {isPresetActive ? '已启用' : '已停用'}
-                            </span>
-                            <div className="relative">
-                                <input type="checkbox" className="sr-only peer" checked={isPresetActive} onChange={handleTogglePresetStyle} />
-                                <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                            </div>
-                        </label>
-                    </div>
-                    <div className={`grid grid-cols-2 gap-3 transition-opacity ${!isPresetActive ? 'opacity-40 pointer-events-none' : ''}`}>
-                        {PRESET_STYLES.map(style => (<button key={style.id} onClick={() => onUpdateProject({ activeStyleId: style.id })} className={`w-full text-center px-4 py-3 rounded-xl border-2 transition-all ${project.activeStyleId === style.id ? 'border-blue-500 bg-blue-50 text-blue-700 font-bold shadow-sm' : 'border-gray-100 hover:border-gray-200 text-gray-600'}`}>{style.name}</button>))}
-                    </div>
-                </div>
-
-                <div className="flex bg-gray-100 p-1 rounded-lg">
-                    <button onClick={() => setStylePreviewMode('chapter')} className={`flex-1 py-2 text-xs font-bold rounded-md transition-all ${stylePreviewMode === 'chapter' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>正文预览</button>
-                    <button onClick={() => setStylePreviewMode('toc')} className={`flex-1 py-2 text-xs font-bold rounded-md transition-all ${stylePreviewMode === 'toc' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>目录预览</button>
-                </div>
-
-                <div className="flex-1 flex flex-col min-h-[300px]">
-                    <div className="flex items-center justify-between mb-3 cursor-pointer group" onClick={() => setShowSnippets(!showSnippets)}>
-                        <h2 className="text-xl font-bold text-gray-800 flex items-center"><Code size={20} className="mr-2 text-purple-500" /> 自定义 CSS</h2>
-                        <button className="text-xs font-medium text-gray-500 flex items-center hover:text-blue-600 transition-colors">
-                            <BookTemplate size={14} className="mr-1" />
-                            {showSnippets ? '隐藏代码库' : '展开代码库'}
-                            {showSnippets ? <ChevronUp size={14} className="ml-1" /> : <ChevronDown size={14} className="ml-1" />}
-                        </button>
+        <div className="flex flex-col md:flex-row h-full bg-gray-50 relative dark:bg-gray-900">
+            {/* Left control column */}
+            <div className="w-full md:w-80 flex-none flex flex-col border-b md:border-b-0 md:border-r border-gray-200 bg-white overflow-hidden z-10 dark:border-gray-800 dark:bg-gray-900">
+                <div className="flex-1 overflow-y-auto">
+                    {/* Sticky toolbar */}
+                    <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-gray-200 bg-white px-3 py-2 dark:border-gray-800 dark:bg-gray-900">
+                        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">样式主题</h2>
+                        <span className="text-xs text-gray-400 dark:text-gray-500">Styles</span>
                     </div>
 
-                    {/* CSS Snippets Toolbar */}
-                    {showSnippets && (
-                        <div className="mb-4 bg-gray-50 p-3 rounded-xl border border-gray-200 animate-in slide-in-from-top-2 fade-in duration-300">
-                            {STYLE_SNIPPETS.map((category, catIdx) => (
-                                <div key={catIdx} className="mb-3 last:mb-0">
-                                    <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{category.category}</h3>
-                                    <div className="flex flex-col gap-1.5">
-                                        {category.items.map((snippet, idx) => (
-                                            <div key={idx} className="group flex items-center gap-1.5">
-                                                <button
-                                                    onClick={() => insertSnippet(snippet.code)}
-                                                    className="flex-1 flex items-center text-[10px] bg-white border border-gray-200 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600 text-gray-600 px-2 py-1.5 rounded transition-all shadow-sm text-left truncate"
-                                                >
-                                                    <Plus size={10} className="mr-1.5 flex-shrink-0" />
-                                                    <span className="truncate">{snippet.name}</span>
-                                                </button>
-                                                <button
-                                                    onClick={() => setInfoSnippet(snippet)}
-                                                    className="p-1.5 text-gray-300 hover:text-blue-500 bg-white border border-gray-100 hover:border-blue-300 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200"
-                                                    title="查看详情"
-                                                >
-                                                    <Info size={12} />
-                                                </button>
-                                            </div>
-                                        ))}
+                    <div className="p-3 space-y-4">
+                        {/* Preset styles */}
+                        <div>
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">预设主题</h3>
+                                <label className="flex items-center cursor-pointer gap-2">
+                                    <span className={`text-[11px] ${isPresetActive ? 'text-gray-600 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'}`}>
+                                        {isPresetActive ? '已启用' : '已停用'}
+                                    </span>
+                                    <div className="relative">
+                                        <input type="checkbox" className="sr-only peer" checked={isPresetActive} onChange={handleTogglePresetStyle} />
+                                        <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-600 dark:bg-gray-700 dark:peer-checked:bg-gray-600"></div>
                                     </div>
-                                </div>
-                            ))}
+                                </label>
+                            </div>
+                            <div className={`grid grid-cols-2 gap-1.5 transition-opacity ${!isPresetActive ? 'opacity-40 pointer-events-none' : ''}`}>
+                                {PRESET_STYLES.map(style => (
+                                    <button
+                                        key={style.id}
+                                        onClick={() => onUpdateProject({ activeStyleId: style.id })}
+                                        className={`text-xs py-1.5 rounded-md border transition-colors ${project.activeStyleId === style.id
+                                            ? 'border-orange-500 bg-orange-50 text-orange-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200'
+                                            : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800'
+                                            }`}
+                                    >
+                                        {style.name}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
-                    )}
 
-                    <textarea className="flex-1 w-full bg-gray-900 text-green-400 font-mono text-xs p-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none shadow-inner min-h-[150px]" placeholder="/* 输入 CSS 覆盖样式，或使用上方按钮插入常用样式 */" value={project.customCSS} onChange={(e) => onUpdateProject({ customCSS: e.target.value })} />
+                        {/* Preview mode segmented control */}
+                        <div className="flex border border-gray-200 rounded-md overflow-hidden dark:border-gray-700">
+                            <button
+                                onClick={() => setStylePreviewMode('chapter')}
+                                className={`flex-1 h-7 text-[11px] transition-colors ${stylePreviewMode === 'chapter' ? 'bg-gray-100 text-gray-900 font-medium dark:bg-gray-800 dark:text-gray-100' : 'text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700'}`}
+                            >
+                                正文预览
+                            </button>
+                            <button
+                                onClick={() => setStylePreviewMode('toc')}
+                                className={`flex-1 h-7 text-[11px] border-l border-gray-200 transition-colors dark:border-gray-700 ${stylePreviewMode === 'toc' ? 'bg-gray-100 text-gray-900 font-medium dark:bg-gray-800 dark:text-gray-100' : 'text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700'}`}
+                            >
+                                目录预览
+                            </button>
+                        </div>
+
+                        {/* Custom CSS */}
+                        <div className="flex flex-col">
+                            <div className="flex items-center justify-between mb-2 cursor-pointer group" onClick={() => setShowSnippets(!showSnippets)}>
+                                <h3 className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 flex items-center dark:text-gray-500">
+                                    <Code size={13} className="mr-1.5 text-gray-400 dark:text-gray-500" /> 自定义 CSS
+                                </h3>
+                                <span className="text-[11px] text-gray-500 flex items-center hover:text-orange-600 transition-colors dark:text-gray-400 dark:hover:text-gray-300">
+                                    <BookTemplate size={12} className="mr-1" />
+                                    {showSnippets ? '隐藏代码库' : '展开代码库'}
+                                    {showSnippets ? <ChevronUp size={12} className="ml-1" /> : <ChevronDown size={12} className="ml-1" />}
+                                </span>
+                            </div>
+
+                            {/* CSS Snippets library */}
+                            {showSnippets && (
+                                <div className="mb-2 border border-gray-200 rounded-md divide-y divide-gray-100 dark:border-gray-700 dark:divide-gray-800">
+                                    {STYLE_SNIPPETS.map((category, catIdx) => (
+                                        <div key={catIdx} className="p-2">
+                                            <h4 className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5 dark:text-gray-500">{category.category}</h4>
+                                            <div className="flex flex-wrap gap-1">
+                                                {category.items.map((snippet, idx) => (
+                                                    <div key={idx} className="group flex items-center">
+                                                        <button
+                                                            onClick={() => insertSnippet(snippet.code)}
+                                                            className="flex items-center text-[11px] bg-white border border-gray-200 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 text-gray-600 pl-1.5 pr-1 py-0.5 rounded-l-md transition-colors max-w-full dark:bg-gray-700 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:border-gray-600 dark:hover:text-gray-300"
+                                                        >
+                                                            <Plus size={10} className="mr-1 flex-shrink-0" />
+                                                            <span className="truncate">{snippet.name}</span>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setInfoSnippet(snippet)}
+                                                            className="flex items-center border border-l-0 border-gray-200 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-500 text-gray-400 px-1 py-0.5 rounded-r-md transition-colors dark:border-gray-700 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:border-gray-600 dark:hover:text-gray-300"
+                                                            title="查看详情"
+                                                        >
+                                                            <Info size={10} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            <textarea
+                                className="w-full min-h-[220px] flex-1 bg-gray-900 text-orange-400 font-mono text-[11px] p-2.5 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500 resize-none"
+                                placeholder="/* 输入 CSS 覆盖样式，或使用上方按钮插入常用样式 */"
+                                value={project.customCSS}
+                                onChange={(e) => onUpdateProject({ customCSS: e.target.value })}
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div className="flex-1 bg-gray-100 p-4 md:p-8 overflow-y-auto flex justify-center">
-                <div className="w-full max-w-[800px] h-[600px] md:h-[1000px] bg-white shadow-xl">
+            {/* Preview panel */}
+            <div className="flex-1 bg-gray-100 overflow-y-auto flex justify-center p-3 dark:bg-gray-800">
+                <div className="w-full max-w-[800px] h-[600px] md:h-[1000px] bg-white border border-gray-200 rounded-md overflow-hidden dark:border-gray-700">
                     <iframe title="Style Preview" srcDoc={iframeSrc} className="w-full h-full border-none" />
                 </div>
             </div>
 
             {/* Snippet Info Modal */}
             {infoSnippet && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-md overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
-                        <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4">
+                    <div className="bg-white rounded-md border border-gray-200 w-full max-w-md overflow-hidden flex flex-col dark:bg-gray-900 dark:border-gray-800">
+                        <div className="px-3 py-2 border-b border-gray-200 flex justify-between items-center dark:border-gray-800">
                             <div className="flex items-center gap-2">
-                                <div className="p-1.5 bg-blue-100 text-blue-600 rounded-lg">
-                                    <Code size={16} />
-                                </div>
-                                <h3 className="font-bold text-gray-800">{infoSnippet.name}</h3>
+                                <Code size={14} className="text-gray-400 dark:text-gray-500" />
+                                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{infoSnippet.name}</h3>
                             </div>
-                            <button onClick={() => setInfoSnippet(null)} className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200 transition-colors">
-                                <X size={18} />
+                            <button
+                                onClick={() => setInfoSnippet(null)}
+                                className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors dark:text-gray-500 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+                                title="关闭"
+                                aria-label="关闭"
+                            >
+                                <X size={16} />
                             </button>
                         </div>
 
-                        <div className="p-5 space-y-4">
+                        <div className="p-3 space-y-3">
                             <div>
-                                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">功能描述</h4>
-                                <p className="text-sm text-gray-700 leading-relaxed">{infoSnippet.description}</p>
+                                <h4 className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1 dark:text-gray-500">功能描述</h4>
+                                <p className="text-[13px] text-gray-700 leading-relaxed dark:text-gray-300">{infoSnippet.description}</p>
                             </div>
 
-                            <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-3">
-                                <h4 className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1 flex items-center">
-                                    <Info size={12} className="mr-1" /> EPUB 兼容性
+                            <div className="bg-orange-50 border border-orange-100 rounded-md p-2.5 dark:bg-gray-800 dark:border-gray-700">
+                                <h4 className="text-[11px] font-semibold uppercase tracking-wider text-orange-600 mb-1 flex items-center dark:text-gray-300">
+                                    <Info size={11} className="mr-1" /> EPUB 兼容性
                                 </h4>
-                                <p className="text-xs text-blue-800 leading-relaxed">{infoSnippet.epubUsage}</p>
+                                <p className="text-[11px] text-orange-800 leading-relaxed dark:text-gray-100">{infoSnippet.epubUsage}</p>
                             </div>
 
                             <div>
-                                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">代码预览</h4>
-                                <div className="bg-gray-900 rounded-lg p-3 relative group">
-                                    <pre className="text-xs font-mono text-green-400 overflow-x-auto whitespace-pre-wrap break-all">
+                                <h4 className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5 dark:text-gray-500">代码预览</h4>
+                                <div className="bg-gray-900 rounded-md p-2.5">
+                                    <pre className="text-[11px] font-mono text-orange-400 overflow-x-auto whitespace-pre-wrap break-all">
                                         {infoSnippet.code}
                                     </pre>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-2">
+                        <div className="px-3 py-2 border-t border-gray-200 flex justify-end gap-2 dark:border-gray-800">
                             <button
                                 onClick={() => setInfoSnippet(null)}
-                                className="px-4 py-2 text-sm text-gray-600 font-medium hover:bg-gray-200 rounded-lg transition-colors"
+                                className="h-7 px-3 text-xs border border-gray-200 bg-white hover:bg-gray-50 text-gray-600 rounded-md transition-colors dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
                             >
                                 关闭
                             </button>
                             <button
                                 onClick={() => insertSnippet(infoSnippet.code)}
-                                className="px-4 py-2 text-sm bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all active:scale-95 flex items-center"
+                                className="h-7 px-3 text-xs bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors flex items-center dark:bg-gray-600 dark:hover:bg-gray-500"
                             >
-                                应用到预览 <ArrowRight size={14} className="ml-1.5" />
+                                应用到预览 <ArrowRight size={12} className="ml-1.5" />
                             </button>
                         </div>
                     </div>

@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import * as htmlToImage from 'html-to-image';
 import { ProjectData, CoverDesign, ImageAsset, CoverGeneratorState } from '../../../types';
-import { Upload, Camera, Type, Check, Code, Loader2, Library, X, ChevronDown, ChevronUp, Palette, Plus, Settings2, Info } from 'lucide-react';
+import { Upload, Camera, Type, Check, Code, Loader2, Library, X, ChevronDown, ChevronUp, Palette, Plus, Info } from 'lucide-react';
 
 interface CoverGeneratorProps {
   project: ProjectData;
@@ -342,9 +342,9 @@ const CoverGenerator: React.FC<CoverGeneratorProps> = ({
   };
 
   const templates = [
-    { name: "商务蓝", bg: 'bg-gradient-to-br from-blue-900 to-gray-900', text: 'text-white', font: 'font-serif', series: 'text-white/60' },
-    { name: "文艺粉", bg: 'bg-gradient-to-tr from-rose-100 to-teal-100', text: 'text-gray-800', font: 'font-sans', series: 'text-gray-500' },
-    { name: "极客黑", bg: 'bg-gray-800', text: 'text-yellow-500', font: 'font-mono', series: 'text-yellow-500/50' },
+    { name: "商务蓝", bg: 'bg-gradient-to-br from-orange-900 to-gray-900', text: 'text-white', font: 'font-serif', series: 'text-white/60' },
+    { name: "文艺粉", bg: 'bg-gradient-to-tr from-rose-100 to-orange-100', text: 'text-gray-800', font: 'font-sans', series: 'text-gray-500' },
+    { name: "极客黑", bg: 'bg-gray-800', text: 'text-orange-500', font: 'font-mono', series: 'text-orange-500/50' },
     { name: "经典白", bg: 'bg-white border-8 border-double border-gray-900', text: 'text-black', font: 'font-serif', series: 'text-gray-400' },
   ];
 
@@ -364,16 +364,16 @@ const CoverGenerator: React.FC<CoverGeneratorProps> = ({
   const isDirectImageMode = !showTextOnCover && selectedBgImage;
 
   return (
-    <div className="h-full flex flex-col md:flex-row p-4 md:p-6 gap-6 bg-[#F5F5F7] overflow-y-auto md:overflow-hidden relative">
+    <div className="h-full flex flex-col md:flex-row bg-gray-50 overflow-y-auto md:overflow-hidden dark:bg-gray-900">
 
-      {/* Left: Controls */}
-      <div className="w-full md:w-1/3 flex flex-col space-y-6 overflow-y-visible md:overflow-y-auto pr-0 md:pr-2 pb-6 custom-scrollbar order-2 md:order-1">
+      {/* Left: Controls (compact panel) */}
+      <aside className="w-full md:w-[320px] flex-shrink-0 flex flex-col bg-white border-r border-gray-200 overflow-y-visible md:overflow-y-auto custom-scrollbar order-2 md:order-1 dark:bg-gray-900 dark:border-gray-800">
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-bold mb-4 flex items-center text-gray-800">
-            <Upload className="mr-2 text-blue-500" size={20} /> 1. 上传或选择图片
+        <section className="px-3 py-2 space-y-2">
+          <h3 className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300">
+            <Upload size={13} className="text-gray-400 dark:text-gray-500" /> 1. 上传或选择图片
           </h3>
-          <p className="text-xs text-gray-500 mb-4">您可以上传最终封面，或从素材库选择一张图片作为背景。</p>
+          <p className="text-[11px] text-gray-500 dark:text-gray-400">您可以上传最终封面，或从素材库选择一张图片作为背景。</p>
           <input
             type="file"
             ref={fileInputRef}
@@ -383,236 +383,234 @@ const CoverGenerator: React.FC<CoverGeneratorProps> = ({
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 rounded-xl transition-colors border border-gray-200 dashed mb-4"
+            className="w-full h-8 text-xs font-medium text-gray-600 bg-white border border-dashed border-gray-300 rounded-md hover:bg-gray-50 hover:border-gray-400 transition-colors dark:text-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
           >
             上传完整封面...
           </button>
 
           <div>
-            <h4 className="text-sm font-semibold text-gray-600 mb-3 flex items-center"><Library size={16} className="mr-2 text-green-500" /> 从素材库选择背景</h4>
-            <div className="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto bg-gray-50/50 p-2 rounded-lg border">
+            <h4 className="flex items-center text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5 dark:text-gray-500"><Library size={12} className="mr-1.5" /> 从素材库选择背景</h4>
+            <div className="grid grid-cols-5 gap-1.5 max-h-32 overflow-y-auto bg-gray-50 p-1.5 rounded-md border border-gray-200 custom-scrollbar dark:bg-gray-900 dark:border-gray-800">
               {project.images.map(img => (
-                <button key={img.id} onClick={() => handleSelectImageFromLibrary(img)} className={`aspect-square border-2 hover:border-blue-500 rounded-md overflow-hidden p-0.5 focus:outline-none focus:ring-2 focus:ring-blue-400 ${selectedBgImageId === img.id ? 'border-blue-600 ring-2 ring-blue-100' : 'border-transparent'}`}>
-                  <img src={img.data} alt={img.name} className="w-full h-full object-cover rounded-sm" />
+                <button key={img.id} onClick={() => handleSelectImageFromLibrary(img)} className={`aspect-square border rounded-sm overflow-hidden focus:outline-none focus:ring-1 focus:ring-orange-400 ${selectedBgImageId === img.id ? 'border-orange-600 ring-1 ring-orange-200 dark:ring-gray-700' : 'border-gray-200 hover:border-orange-400 dark:border-gray-800'}`}>
+                  <img src={img.data} alt={img.name} className="w-full h-full object-cover" />
                 </button>
               ))}
-              {project.images.length === 0 && <p className="col-span-4 text-xs text-center text-gray-400 py-4">素材库为空</p>}
+              {project.images.length === 0 && <p className="col-span-5 text-[11px] text-center text-gray-400 py-3 dark:text-gray-500">素材库为空</p>}
             </div>
-            {selectedBgImage && <button onClick={clearBackground} className="text-xs text-gray-500 hover:text-red-500 mt-2 flex items-center"><X size={12} className="mr-1" />清除背景</button>}
+            {selectedBgImage && <button onClick={clearBackground} className="text-[11px] text-gray-500 hover:text-red-500 mt-1.5 flex items-center dark:text-gray-400"><X size={11} className="mr-1" />清除背景</button>}
           </div>
-        </div>
+        </section>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex-1">
-          <h3 className="text-lg font-bold mb-4 flex items-center text-gray-800">
-            <Type className="mr-2 text-purple-500" size={20} /> 2. 设计与生成
+        <section className="px-3 py-2 space-y-3 border-t border-gray-200 flex-1 dark:border-gray-800">
+          <h3 className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300">
+            <Type size={13} className="text-gray-400 dark:text-gray-500" /> 2. 设计与生成
           </h3>
-          <div className="space-y-5">
-            <div>
-              <label className="block text-sm font-semibold text-gray-600 mb-3">封面模式</label>
-              <div className="flex items-center space-x-1 bg-gray-100 p-1 rounded-lg mb-4">
-                <button
-                  onClick={() => handleSetShowTextOnCover(true)}
-                  className={`w-full text-center px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${showTextOnCover ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:bg-gray-200/50'}`}
-                >
-                  图文封面
-                </button>
-                <button
-                  onClick={() => {
-                    handleSetShowTextOnCover(false);
-                    if (selectedBgImage) {
-                      // Direct reference mode
-                      onUpdateCover(selectedBgImage, selectedBgImageId);
+
+          <div>
+            <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5 dark:text-gray-500">封面模式</label>
+            <div className="flex items-center bg-gray-100 rounded-md p-0.5 dark:bg-gray-800">
+              <button
+                onClick={() => handleSetShowTextOnCover(true)}
+                className={`flex-1 h-7 rounded-sm text-xs font-medium transition-colors ${showTextOnCover ? 'bg-white text-orange-600 border border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+              >
+                图文封面
+              </button>
+              <button
+                onClick={() => {
+                  handleSetShowTextOnCover(false);
+                  if (selectedBgImage) {
+                    // Direct reference mode
+                    onUpdateCover(selectedBgImage, selectedBgImageId);
+                  }
+                }}
+                className={`flex-1 h-7 rounded-sm text-xs font-medium transition-colors ${!showTextOnCover ? 'bg-white text-orange-600 border border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+              >
+                纯图封面
+              </button>
+            </div>
+          </div>
+
+          {showTextOnCover && (
+            <>
+              {/* 标题大小调整滑块 */}
+              <div className="border-t border-gray-100 pt-2 dark:border-gray-800">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">标题大小</span>
+                  <span className="text-[11px] font-mono text-gray-500 dark:text-gray-400">{project.coverDesign?.fontSizeTitle ?? 48}px</span>
+                </div>
+                <input
+                  type="range"
+                  min={16}
+                  max={96}
+                  step={2}
+                  value={project.coverDesign?.fontSizeTitle ?? 48}
+                  onChange={(e) => {
+                    if (onUpdateCoverDesign && project.coverDesign) {
+                      onUpdateCoverDesign({ ...project.coverDesign, fontSizeTitle: Number(e.target.value) });
                     }
                   }}
-                  className={`w-full text-center px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${!showTextOnCover ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:bg-gray-200/50'}`}
-                >
-                  纯图封面
-                </button>
+                  className="w-full h-1 bg-gray-200 rounded-full appearance-none cursor-pointer accent-orange-600 mt-1.5 dark:bg-gray-700"
+                />
+                <div className="flex justify-between text-[10px] text-gray-400 mt-0.5 dark:text-gray-500">
+                  <span>小 16px</span>
+                  <span>大 96px</span>
+                </div>
               </div>
 
-               {showTextOnCover && (
-                <>
-                  {/* 标题大小调整滑块 */}
-                  <div className="p-3 bg-purple-50/50 rounded-xl border border-purple-100 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-gray-700">标题大小</span>
-                      <span className="text-xs font-mono text-purple-600 font-bold">{project.coverDesign?.fontSizeTitle ?? 48}px</span>
-                    </div>
-                    <input
-                      type="range"
-                      min={16}
-                      max={96}
-                      step={2}
-                      value={project.coverDesign?.fontSizeTitle ?? 48}
-                      onChange={(e) => {
-                        if (onUpdateCoverDesign && project.coverDesign) {
-                          onUpdateCoverDesign({ ...project.coverDesign, fontSizeTitle: Number(e.target.value) });
-                        }
-                      }}
-                      className="w-full h-1.5 bg-purple-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
-                    />
-                    <div className="flex justify-between text-[10px] text-gray-400">
-                      <span>小 16px</span>
-                      <span>大 96px</span>
-                    </div>
-                  </div>
+              {/* 显示系列丛书 */}
+              <div className="flex items-center justify-between border-t border-gray-100 pt-2 dark:border-gray-800">
+                <div className="flex flex-col">
+                  <span className="text-xs text-gray-700 dark:text-gray-300">显示系列丛书</span>
+                  {!project.metadata.series && <span className="text-[10px] text-gray-400 flex items-center mt-0.5 dark:text-gray-500"><Info size={10} className="mr-1" /> 需在“书籍信息”中填写</span>}
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" className="sr-only peer" checked={project.coverDesign?.showSeries || false} onChange={handleToggleSeries} disabled={!project.metadata.series} />
+                  <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-600 dark:bg-gray-700"></div>
+                </label>
+              </div>
+            </>
+          )}
 
-                  {/* 显示系列丛书 */}
-                  <div className="flex items-center justify-between p-3 bg-blue-50/50 rounded-xl border border-blue-100">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-gray-700">显示系列丛书</span>
-                      {!project.metadata.series && <span className="text-[10px] text-gray-400 flex items-center mt-0.5"><Info size={10} className="mr-1" /> 需在“书籍信息”中填写</span>}
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" checked={project.coverDesign?.showSeries || false} onChange={handleToggleSeries} disabled={!project.metadata.series} />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-                </>
-              )}
+          <div className="border-t border-gray-100 pt-2 dark:border-gray-800">
+            <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5 dark:text-gray-500">预设风格 (点击取消)</label>
+            <div className="grid grid-cols-2 gap-1.5">
+              {templates.map((t, idx) => (
+                <button key={idx} onClick={() => handleSetActiveTemplate(idx)} className={`h-7 w-full rounded-md border text-xs font-medium transition-colors flex items-center justify-center px-2 ${activeTemplate === idx ? 'border-orange-500 bg-orange-50 text-orange-700 dark:bg-gray-800 dark:text-gray-200' : 'border-gray-200 text-gray-600 hover:border-orange-300 hover:bg-gray-50 dark:border-gray-800 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:bg-gray-700'}`}><span className={`w-2.5 h-2.5 rounded-full mr-1.5 border border-black/10 ${t.bg}`}></span>{t.name}</button>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-t border-gray-100 pt-2 dark:border-gray-800">
+            <div
+              onClick={() => setShowCssEditor(!showCssEditor)}
+              className="flex items-center justify-between cursor-pointer group select-none"
+            >
+              <span className="text-xs font-semibold text-gray-600 flex items-center dark:text-gray-400">
+                <Code size={13} className="mr-1.5 text-gray-400 group-hover:text-orange-500 dark:text-gray-500" />
+                {showCssEditor ? '隐藏 CSS 编辑器' : '自定义 CSS (Advanced)'}
+              </span>
+              {showCssEditor ? <ChevronUp size={13} className="text-gray-400 dark:text-gray-500" /> : <ChevronDown size={13} className="text-gray-400 dark:text-gray-500" />}
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-600 mb-3">预设风格 (点击取消)</label>
-              <div className="grid grid-cols-2 gap-3">
-                {templates.map((t, idx) => (
-                  <button key={idx} onClick={() => handleSetActiveTemplate(idx)} className={`h-12 w-full rounded-lg border-2 transition-all flex items-center justify-center text-xs font-medium ${activeTemplate === idx ? 'border-blue-500 ring-2 ring-blue-100 shadow-md' : 'border-gray-200 hover:border-blue-300'}`}><span className={`w-3 h-3 rounded-full mr-2 border border-black/10 ${t.bg}`}></span>{t.name}</button>
-                ))}
-              </div>
-            </div>
+            {showCssEditor && (
+              <div className="mt-2 space-y-2">
+                <div className="border border-gray-200 rounded-md p-2 relative bg-gray-50 dark:border-gray-800 dark:bg-gray-900">
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5 dark:text-gray-500">快速添加样式</label>
 
-            <div className="border-t border-gray-100 pt-4">
-              <div
-                onClick={() => setShowCssEditor(!showCssEditor)}
-                className="flex items-center justify-between cursor-pointer group mb-3 select-none"
-              >
-                <span className="text-sm font-bold text-gray-700 flex items-center">
-                  <Code size={16} className="mr-2 text-gray-400 group-hover:text-blue-500" />
-                  {showCssEditor ? '隐藏 CSS 编辑器' : '自定义 CSS (Advanced)'}
-                </span>
-                {showCssEditor ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
-              </div>
+                  <div className="grid grid-cols-2 gap-1.5 relative">
+                    {SNIPPET_TEMPLATES.map((snippet, idx) => {
+                      const isActive = activeSnippet?.id === snippet.id;
+                      return (
+                        <div key={snippet.id} className="relative group/snippet">
+                          <button
+                            onClick={() => toggleSnippetPopup(snippet)}
+                            className={`w-full h-7 px-2 rounded-md border transition-colors flex items-center justify-center gap-1.5 text-xs ${isActive
+                              ? 'bg-orange-50 border-orange-500 text-orange-700 dark:bg-gray-800 dark:text-gray-200'
+                              : 'bg-white border-gray-200 text-gray-600 hover:border-orange-300 hover:text-orange-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-300'
+                              }`}
+                          >
+                            <Plus size={12} className={isActive ? 'text-orange-500' : 'text-gray-400 dark:text-gray-500'} />
+                            <span className="font-medium">{snippet.name}</span>
+                          </button>
 
-              {showCssEditor && (
-                <div className="animate-in slide-in-from-top-2 fade-in duration-300">
-                  <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-4 relative">
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">快速添加样式</label>
+                          {isActive && (
+                            <div className={`absolute top-full mt-2 z-50 w-64 bg-white rounded-md border border-gray-200 shadow-sm p-3 dark:bg-gray-900 dark:border-gray-800 ${idx % 2 === 0 ? 'left-0' : 'right-0'}`}>
+                              <div className="flex justify-between items-center mb-2 border-b border-gray-100 pb-2 dark:border-gray-800">
+                                <h4 className="text-[11px] font-semibold text-gray-700 flex items-center dark:text-gray-300">
+                                  <Palette size={12} className="mr-1.5 text-gray-400 dark:text-gray-500" /> 配置{snippet.name}
+                                </h4>
+                                <button onClick={() => setActiveSnippet(null)} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-200" title="关闭"><X size={13} /></button>
+                              </div>
 
-                    <div className="grid grid-cols-2 gap-3 relative">
-                      {SNIPPET_TEMPLATES.map((snippet, idx) => {
-                        const isActive = activeSnippet?.id === snippet.id;
-                        return (
-                          <div key={snippet.id} className="relative group/snippet">
-                            <button
-                              onClick={() => toggleSnippetPopup(snippet)}
-                              className={`w-full py-3 px-2 rounded-xl border transition-all flex flex-col items-center justify-center gap-2 ${isActive
-                                ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/30'
-                                : 'bg-white border-gray-100 text-gray-600 hover:border-blue-300 hover:text-blue-600 hover:shadow-md'
-                                }`}
-                            >
-                              <Plus size={16} className={isActive ? 'text-blue-200' : 'text-gray-300'} />
-                              <span className="text-xs font-bold">{snippet.name}</span>
-                            </button>
+                              <div className="space-y-2 mb-3 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+                                {snippet.fields.map(field => (
+                                  <div key={field.key}>
+                                    <label className="block text-[10px] font-semibold text-gray-500 uppercase mb-1 flex justify-between dark:text-gray-400">
+                                      <span>{field.label}</span>
+                                      {field.type === 'range' && <span className="text-gray-400 font-mono dark:text-gray-500">{snippetValues[field.key]}{field.unit}</span>}
+                                    </label>
 
-                            {isActive && (
-                              <div className={`absolute top-full mt-3 z-50 w-64 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border border-gray-100 p-4 animate-in fade-in zoom-in-95 duration-200 ${idx % 2 === 0 ? 'left-0' : 'right-0'}`}>
-                                <div className="flex justify-between items-center mb-3 border-b border-gray-100 pb-2">
-                                  <h4 className="text-xs font-bold text-gray-800 flex items-center">
-                                    <Palette size={12} className="mr-1.5 text-blue-500" /> 配置{snippet.name}
-                                  </h4>
-                                  <button onClick={() => setActiveSnippet(null)} className="text-gray-400 hover:text-gray-600"><X size={14} /></button>
-                                </div>
-
-                                <div className="space-y-3 mb-4 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
-                                  {snippet.fields.map(field => (
-                                    <div key={field.key}>
-                                      <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1 flex justify-between">
-                                        <span>{field.label}</span>
-                                        {field.type === 'range' && <span className="text-gray-400 font-mono">{snippetValues[field.key]}{field.unit}</span>}
-                                      </label>
-
-                                      {field.type === 'color' && (
-                                        <div className="flex items-center space-x-2">
-                                          <input
-                                            type="color"
-                                            value={snippetValues[field.key] || field.default}
-                                            onChange={e => setSnippetValues(prev => ({ ...prev, [field.key]: e.target.value }))}
-                                            className="h-8 w-8 rounded-lg cursor-pointer border border-gray-200 p-0 overflow-hidden shadow-sm"
-                                          />
-                                          <input
-                                            type="text"
-                                            value={snippetValues[field.key] || field.default}
-                                            onChange={e => setSnippetValues(prev => ({ ...prev, [field.key]: e.target.value }))}
-                                            className="flex-1 border border-gray-200 rounded-lg px-2 py-1 text-xs font-mono uppercase focus:ring-2 focus:ring-blue-500 outline-none"
-                                          />
-                                        </div>
-                                      )}
-
-                                      {field.type === 'number' && (
-                                        <div className="relative">
-                                          <input
-                                            type="number"
-                                            value={snippetValues[field.key] || field.default}
-                                            onChange={e => setSnippetValues(prev => ({ ...prev, [field.key]: Number(e.target.value) }))}
-                                            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 outline-none"
-                                          />
-                                          {field.unit && <span className="absolute right-3 top-1.5 text-[10px] text-gray-400">{field.unit}</span>}
-                                        </div>
-                                      )}
-
-                                      {field.type === 'range' && (
+                                    {field.type === 'color' && (
+                                      <div className="flex items-center space-x-1.5">
                                         <input
-                                          type="range"
-                                          min={field.min}
-                                          max={field.max}
-                                          step={field.step || 1}
+                                          type="color"
+                                          value={snippetValues[field.key] || field.default}
+                                          onChange={e => setSnippetValues(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                          className="h-7 w-7 rounded-md cursor-pointer border border-gray-200 p-0 overflow-hidden dark:border-gray-700"
+                                        />
+                                        <input
+                                          type="text"
+                                          value={snippetValues[field.key] || field.default}
+                                          onChange={e => setSnippetValues(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                          className="flex-1 h-7 border border-gray-200 rounded-md px-2 text-xs font-mono uppercase focus:ring-1 focus:ring-orange-500 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
+                                        />
+                                      </div>
+                                    )}
+
+                                    {field.type === 'number' && (
+                                      <div className="relative">
+                                        <input
+                                          type="number"
                                           value={snippetValues[field.key] || field.default}
                                           onChange={e => setSnippetValues(prev => ({ ...prev, [field.key]: Number(e.target.value) }))}
-                                          className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 block mt-2"
+                                          className="w-full h-7 border border-gray-200 rounded-md px-2 text-xs focus:ring-1 focus:ring-orange-500 outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
                                         />
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
+                                        {field.unit && <span className="absolute right-2 top-1.5 text-[10px] text-gray-400 dark:text-gray-500">{field.unit}</span>}
+                                      </div>
+                                    )}
 
-                                <div className="flex justify-end pt-2 border-t border-gray-100">
-                                  <button
-                                    onClick={confirmSnippet}
-                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3 rounded-lg shadow-md shadow-blue-500/20 transition-all active:scale-95 flex items-center justify-center"
-                                  >
-                                    <Check size={14} className="mr-1.5" /> 确认添加
-                                  </button>
-                                </div>
+                                    {field.type === 'range' && (
+                                      <input
+                                        type="range"
+                                        min={field.min}
+                                        max={field.max}
+                                        step={field.step || 1}
+                                        value={snippetValues[field.key] || field.default}
+                                        onChange={e => setSnippetValues(prev => ({ ...prev, [field.key]: Number(e.target.value) }))}
+                                        className="w-full h-1 bg-gray-200 rounded-full appearance-none cursor-pointer accent-orange-600 block mt-1.5 dark:bg-gray-700"
+                                      />
+                                    )}
+                                  </div>
+                                ))}
                               </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
+
+                              <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
+                                <button
+                                  onClick={confirmSnippet}
+                                  className="w-full h-7 border border-orange-500 text-orange-600 hover:bg-orange-50 text-xs font-semibold rounded-md transition-colors flex items-center justify-center dark:text-gray-300 dark:hover:bg-gray-800"
+                                >
+                                  <Check size={13} className="mr-1.5" /> 确认添加
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-                  <textarea
-                    className="w-full h-40 bg-gray-900 text-green-400 font-mono text-xs p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y shadow-inner"
-                    placeholder="/* 输入 CSS */&#10;#cover-preview { ... }&#10;#cover-title { ... }"
-                    value={project.coverCustomCSS || ''}
-                    onChange={(e) => onUpdateCoverCSS(e.target.value)}
-                  />
                 </div>
-              )}
-            </div>
-
-            <button onClick={generateCover} disabled={status !== 'idle' || !!isDirectImageMode} className={`w-full py-3 rounded-xl flex items-center justify-center font-bold text-white transition-all duration-300 shadow-lg ${status === 'success' ? 'bg-green-500 shadow-green-200' : status === 'generating' ? 'bg-blue-400 cursor-wait' : isDirectImageMode ? 'bg-gray-400 cursor-not-allowed shadow-none' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200 hover:scale-[1.02] active:scale-95'}`}>{status === 'generating' && <Loader2 size={18} className="mr-2 animate-spin" />}{status === 'success' && <Check size={18} className="mr-2" />}{status === 'idle' && <Camera size={18} className="mr-2" />}{status === 'generating' ? '正在渲染...' : status === 'success' ? '封面已更新!' : isDirectImageMode ? '已自动应用图片封面' : '生成并应用封面'}</button>
+                <textarea
+                  className="w-full h-32 bg-gray-900 text-orange-400 font-mono text-[11px] p-2 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500 resize-y custom-scrollbar"
+                  placeholder="/* 输入 CSS */&#10;#cover-preview { ... }&#10;#cover-title { ... }"
+                  value={project.coverCustomCSS || ''}
+                  onChange={(e) => onUpdateCoverCSS(e.target.value)}
+                />
+              </div>
+            )}
           </div>
-        </div>
-      </div>
 
-      <div className="w-full md:w-2/3 bg-gray-200/50 md:rounded-3xl border border-gray-200 flex flex-col items-center justify-center p-8 relative overflow-hidden order-1 md:order-2 min-h-[400px]">
-        <div className="absolute inset-0 pattern-grid opacity-10 pointer-events-none"></div>
-        <div className="relative group mb-8 transform scale-75 md:scale-100 transition-transform origin-center">
+          <button onClick={generateCover} disabled={status !== 'idle' || !!isDirectImageMode} className={`w-full h-8 rounded-md flex items-center justify-center text-xs font-semibold text-white transition-colors ${status === 'success' ? 'bg-orange-600' : status === 'generating' ? 'bg-orange-400 cursor-wait' : isDirectImageMode ? 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400' : 'bg-orange-600 hover:bg-orange-700 dark:bg-gray-600 dark:hover:bg-gray-500'}`}>{status === 'generating' && <Loader2 size={14} className="mr-1.5 animate-spin" />}{status === 'success' && <Check size={14} className="mr-1.5" />}{status === 'idle' && <Camera size={14} className="mr-1.5" />}{status === 'generating' ? '正在渲染...' : status === 'success' ? '封面已更新!' : isDirectImageMode ? '已自动应用图片封面' : '生成并应用封面'}</button>
+        </section>
+      </aside>
+
+      <div className="flex-1 bg-gray-50 border-t md:border-t-0 border-gray-200 flex flex-col items-center justify-center p-6 relative overflow-hidden order-1 md:order-2 min-h-[400px] dark:bg-gray-900 dark:border-gray-800">
+        <div className="relative group mb-6 transform scale-75 md:scale-100 transition-transform origin-center">
           <div className="absolute -inset-4 bg-white/40 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
           <div
             id="cover-preview"
             ref={coverRef}
-            className={`w-[320px] h-[480px] shadow-2xl flex flex-col items-center justify-center p-8 text-center transition-all duration-300 relative overflow-hidden ${!selectedBgImage ? currentTemplate.bg : ''}`}
+            className={`w-[320px] h-[480px] flex flex-col items-center justify-center p-8 text-center transition-all duration-300 relative overflow-hidden ${!selectedBgImage ? currentTemplate.bg : ''}`}
             style={{ minWidth: '320px', minHeight: '480px', backgroundImage: selectedBgImage ? `url(${selectedBgImage})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}
           >
             <style>{project.coverCustomCSS}</style>
@@ -639,7 +637,7 @@ const CoverGenerator: React.FC<CoverGeneratorProps> = ({
             {!selectedBgImage && showTextOnCover && activeTemplate === 1 && <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-white/20 to-transparent"></div>}
           </div>
         </div>
-        {project.cover && (<div className="flex items-center space-x-3 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-200"><span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span><span className="text-xs font-medium text-gray-500">当前已应用此封面</span></div>)}
+        {project.cover && (<div className="flex items-center space-x-2 bg-white px-2.5 py-1 rounded-full border border-gray-200 dark:bg-gray-800 dark:border-gray-700"><span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span><span className="text-[11px] text-gray-500 dark:text-gray-400">当前已应用此封面</span></div>)}
       </div>
     </div>
   );
