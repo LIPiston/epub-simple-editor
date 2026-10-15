@@ -9,7 +9,7 @@
  * 5. 减少视觉混乱，提升易用性
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { type Editor } from '@tiptap/react';
 import {
@@ -73,6 +73,9 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [dividerMenuStyle, setDividerMenuStyle] = useState<{ top: number; left: number } | null>(null);
   const [moreMenuStyle, setMoreMenuStyle] = useState<{ top: number; left: number } | null>(null);
+  /** 更多菜单实测宽度，用于右对齐；首帧未量到时按 CSS 里的 w-64 估一个 */
+  const [moreMenuWidth, setMoreMenuWidth] = useState(256);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
 
   const dividerRef = useRef<HTMLDivElement>(null);
   const moreRef = useRef<HTMLDivElement>(null);
@@ -95,11 +98,13 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   }, [showDividerMenu]);
 
   // 更多菜单定位
+  // 先按锚点右对齐给一个初值；真实宽度由 useLayoutEffect 量出后再夹到视口内，
+  // 免得菜单变宽以后在窄屏右侧溢出（宽度值只写在 CSS 里，这边不重复一遍）。
   useEffect(() => {
     const updatePosition = () => {
       if (!showMoreMenu || !moreRef.current) return;
       const rect = moreRef.current.getBoundingClientRect();
-      setMoreMenuStyle({ top: rect.bottom + 6, left: rect.right - 200 }); // 右对齐
+      setMoreMenuStyle({ top: rect.bottom + 6, left: rect.right - moreMenuWidth });
     };
 
     updatePosition();
@@ -109,7 +114,26 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
       window.removeEventListener('resize', updatePosition);
       window.removeEventListener('scroll', updatePosition, true);
     };
-  }, [showMoreMenu]);
+  }, [showMoreMenu, moreMenuWidth]);
+
+  // 量出菜单真实宽度，并把位置夹进视口（左/右都留 8px 余量）
+  useLayoutEffect(() => {
+    const el = moreMenuRef.current;
+    if (!showMoreMenu || !el) return;
+
+    const { width } = el.getBoundingClientRect();
+    if (width && Math.abs(width - moreMenuWidth) > 0.5) {
+      setMoreMenuWidth(width);
+      return; // 宽度变了会重跑定位；这里不直接改位置，避免用到旧值
+    }
+
+    setMoreMenuStyle((prev) => {
+      if (!prev) return prev;
+      const maxLeft = Math.max(8, window.innerWidth - width - 8);
+      const left = Math.min(Math.max(8, prev.left), maxLeft);
+      return left === prev.left ? prev : { ...prev, left };
+    });
+  }, [showMoreMenu, moreMenuStyle, moreMenuWidth]);
 
   // 点击外部关闭菜单
   useEffect(() => {
@@ -427,12 +451,13 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
         document.body,
       )}
 
-      {/* 更多工具菜单（移动端）*/}
+      {/* 更多工具菜单（移动端 / 平板）*/}
       {showMoreMenu && moreMenuStyle && createPortal(
         <div
           id="editor-more-menu"
+          ref={moreMenuRef}
           style={{ position: 'fixed', top: moreMenuStyle.top, left: moreMenuStyle.left }}
-          className="z-[120] bg-white border border-gray-200 rounded-md p-3 w-48 animate-in fade-in zoom-in-95 duration-150 dark:bg-gray-900 dark:border-gray-700"
+          className="z-[120] bg-white border border-gray-200 rounded-md p-3 w-64 max-h-[70vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150 dark:bg-gray-900 dark:border-gray-700"
         >
           <div className="space-y-1">
             <MenuButton
@@ -505,11 +530,28 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
 
             <div className="border-t border-gray-200 my-2 dark:border-gray-700" />
 
-            <MenuButton
-              icon={<SeparatorHorizontal size={16} />}
-              label="分割线"
-              onClick={() => { insertDivider(''); setShowMoreMenu(false); }}
-            />
+            {/*
+              分割线：工具栏上的分割线按钮是 hidden sm:block，窄屏（<640px）看不到，
+              这里必须能选到全部 6 种样式，否则窄屏只能用上默认那一种。
+            */}
+            <div className="px-3 pt-1 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+              分割线
+            </div>
+            <div className="grid grid-cols-3 gap-1 px-1">
+              {DIVIDERS.map(({ label, cls, preview }, index) => (
+                <button
+                  key={cls || 'hr'}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => { insertDivider(cls); setShowMoreMenu(false); }}
+                  title={label}
+                  data-divider-option={cls || 'default'}
+                  className="flex flex-col items-center gap-0.5 rounded-md px-1 py-1.5 text-gray-600 transition-colors hover:bg-orange-50 hover:text-orange-700 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                >
+                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500">{index + 1}</span>
+                  <span className="text-[11px] whitespace-nowrap">{preview}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>,
         document.body,
