@@ -195,28 +195,48 @@ const newPage = async () => {
   return page;
 };
 
-/** 挂载 App 并等待书库就绪（加载遮罩消失、侧栏出现） */
+/** 挂载 App 并等待书库就绪（加载遮罩消失、导航出现） */
 const bootApp = async (page) => {
   await page.evaluate(() => window.__mount());
   await page.waitForSelector('text=书籍管理', { timeout: 20000 });
   await page.waitForTimeout(600);
 };
 
-/** 点击侧边栏的某个菜单项 */
-const clickMenu = async (page, label) => {
-  await page.evaluate((text) => {
-    const btn = Array.from(document.querySelectorAll('button')).find((b) =>
-      (b.textContent || '').trim() === text,
-    );
-    if (!btn) throw new Error('找不到菜单项: ' + text);
-    btn.click();
-  }, label);
+/**
+ * 切到某个视图（按视图 id）。
+ *
+ * 导航改成了 VS Code 式两级菜单后，二级项只渲染「当前一级分组」下的视图，
+ * 所以不能直接按文字点；要先确保它所属的一级分组已展开，再点二级项。
+ * 若二级项已在 DOM 里（说明分组已展开），则不再点一级，避免把面板点成收起。
+ */
+const gotoScreen = async (page, viewId) => {
+  const alreadyOpen = await page.evaluate(
+    (id) => !!document.querySelector(`[data-nav-level="2"][data-nav-id="${id}"]`),
+    viewId,
+  );
+
+  if (!alreadyOpen) {
+    await page.evaluate((id) => {
+      const group = Array.from(document.querySelectorAll('[data-nav-level="1"]')).find((b) =>
+        (b.getAttribute('data-nav-views') || '').split(',').includes(id),
+      );
+      if (!group) throw new Error('找不到含该视图的一级分组: ' + id);
+      group.click();
+    }, viewId);
+    await page.waitForTimeout(350);
+  }
+
+  await page.evaluate((id) => {
+    const item = document.querySelector(`[data-nav-level="2"][data-nav-id="${id}"]`);
+    if (!item) throw new Error('找不到二级菜单项: ' + id);
+    item.click();
+  }, viewId);
   await page.waitForTimeout(400);
 };
 
 /** 回到书籍管理界面 */
 const gotoLibrary = async (page) => {
-  await clickMenu(page, '书籍管理');
+  await gotoScreen(page, 'library');
   await page.waitForTimeout(400);
 };
 
@@ -257,11 +277,11 @@ const cardTitles = (page) =>
 /** 在书库界面点某本书的「打开」 */
 const openBookByTitle = async (page, title) => {
   await page.evaluate((t) => {
-    const heading = Array.from(document.querySelectorAll('h3')).find(
+    const heading = Array.from(document.querySelectorAll('[data-book-card] h3')).find(
       (h) => (h.textContent || '').trim() === t,
     );
     if (!heading) throw new Error('书库里找不到书籍卡片: ' + t);
-    const card = heading.closest('div.rounded-2xl') || heading.closest('div');
+    const card = heading.closest('[data-book-card]');
     const btn = Array.from(card.querySelectorAll('button')).find((b) =>
       (b.textContent || '').includes('打开'),
     );
@@ -277,13 +297,29 @@ console.log('1. 书籍管理入口与默认视图');
   const page = await newPage();
   await bootApp(page);
 
-  const menu = await page.evaluate(() =>
-    Array.from(document.querySelectorAll('nav button')).map((b) => (b.textContent || '').trim()),
+  // 导航改成 VS Code 式两级：一级是图标分组，二级才列出具体视图。
+  // 「书籍管理」是二级里的第一项，位于「书库」分组下。
+  const nav = await page.evaluate(() => ({
+    level1: Array.from(document.querySelectorAll('[data-nav-level="1"]')).map((b) => ({
+      id: b.getAttribute('data-nav-id'),
+      views: (b.getAttribute('data-nav-views') || '').split(','),
+      title: b.getAttribute('title') || '',
+    })),
+    level2: Array.from(document.querySelectorAll('[data-nav-level="2"]')).map((b) => ({
+      id: b.getAttribute('data-nav-id'),
+      active: b.getAttribute('data-active') === 'true',
+    })),
+  }));
+
+  record(
+    '一级活动栏含「书库」分组，其下第一项是「书籍管理」',
+    nav.level1.some((g) => g.id === 'library' && g.views[0] === 'library'),
+    `  一级分组: ${JSON.stringify(nav.level1.map((g) => g.id))}`,
   );
   record(
-    '侧边栏第一项是「书籍管理」',
-    menu[0] === '书籍管理',
-    `  侧栏菜单顺序: ${JSON.stringify(menu)}`,
+    '二级面板列出「书籍管理」，且默认选中',
+    nav.level2.some((v) => v.id === 'library' && v.active),
+    `  二级项: ${JSON.stringify(nav.level2)}`,
   );
 
   const headingVisible = await page.evaluate(() =>
@@ -319,17 +355,16 @@ console.log('\n2. 多书并列与「打开」跳转');
   await openBookByTitle(page, '乙书');
   const afterOpen = await page.evaluate(() => ({
     hasProseMirror: !!document.querySelector('.ProseMirror'),
-    // 侧栏菜单的选中态：目录管理应为当前视图
-    activeMenu: Array.from(document.querySelectorAll('nav button')).find((b) =>
-      (b.className || '').includes('text-blue-600'),
-    )?.textContent?.trim(),
+    // 二级菜单的选中态：目录管理应为当前视图
+    activeMenu: document.querySelector('[data-nav-level="2"][data-active="true"]')
+      ?.getAttribute('data-nav-id'),
     editorText: document.querySelector('.ProseMirror')?.textContent || '',
   }));
 
   record(
     '点「打开」跳到这本书的章节管理（编辑器）',
-    afterOpen.hasProseMirror && afterOpen.activeMenu === '目录管理',
-    `  编辑器出现=${afterOpen.hasProseMirror}，高亮菜单=${afterOpen.activeMenu}`,
+    afterOpen.hasProseMirror && afterOpen.activeMenu === 'chapters',
+    `  编辑器出现=${afterOpen.hasProseMirror}，高亮视图=${afterOpen.activeMenu}`,
   );
   record(
     '打开的是被点击的那本书（乙书）',
@@ -398,7 +433,7 @@ console.log('\n4. 复制、重命名与删除');
   // 复制：复制会切换当前书并进入编辑器，所以先回到书库确认结果
   await page.evaluate(() => {
     const heading = Array.from(document.querySelectorAll('h3')).find((h) => h.textContent.trim() === '原书');
-    const card = heading.closest('div.rounded-2xl') || heading.closest('div');
+    const card = heading.closest('[data-book-card]');
     card.querySelector('button[title="复制这本书"]').click();
   });
   await page.waitForTimeout(1500);
@@ -444,7 +479,7 @@ console.log('\n4. 复制、重命名与删除');
   await page.evaluate(() => {
     const heading = Array.from(document.querySelectorAll('h3')).find((h) => h.textContent.trim() === '改名后的书');
     if (!heading) throw new Error('找不到「改名后的书」标题');
-    const card = heading.closest('div.rounded-2xl') || heading.closest('div');
+    const card = heading.closest('[data-book-card]');
     card.querySelector('button[title="删除"]').click();
   });
   await page.waitForTimeout(600);
@@ -560,7 +595,7 @@ console.log('\n6. 阅读位置按书籍隔离（副本与原书不串位）');
   await scrollTo(600);
 
   // 打开乙书 → 滚到 1000
-  await clickMenu(page, '书籍管理');
+  await gotoScreen(page, 'library');
   await openBookByTitle(page, '乙书');
   await page.waitForSelector('.ProseMirror', { timeout: 20000 });
   await page.waitForTimeout(500);
@@ -589,7 +624,7 @@ console.log('\n6. 阅读位置按书籍隔离（副本与原书不串位）');
   );
 
   // 回到甲书，应恢复到 600 而不是乙书的 1000
-  await clickMenu(page, '书籍管理');
+  await gotoScreen(page, 'library');
   await openBookByTitle(page, '甲书');
   await page.waitForSelector('.ProseMirror', { timeout: 20000 });
   await page.waitForTimeout(1200);

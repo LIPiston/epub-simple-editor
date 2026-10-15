@@ -62,7 +62,7 @@ const project = (chapters) => ({
   images: [], extraFiles: [], cover: null, coverId: null,
   coverCustomCSS: '', activeStyleId: 'classic', isPresetStyleActive: true,
   customCSS: '', coverGeneratorState: {
-    selectedBgImageId: null, activeTemplateIndex: 0, showTextOnCover: true, aiCoverPrompt: '',
+    selectedBgImageId: null, activeTemplateIndex: 0, showTextOnCover: true,
   },
 });
 

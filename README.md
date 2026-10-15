@@ -7,7 +7,7 @@
 ![GitHub License](https://img.shields.io/github/license/kukurii/epub-maker?style=flat-square)
 ![Deployment Status](https://img.shields.io/github/deployments/kukurii/epub-maker/github-pages?label=deploy&style=flat-square)
 
-一个功能强大的在线 EPUB 电子书制作应用，使用 React 19 和 TypeScript 构建。轻松创建、编辑和导出专业级的 EPUB 3 格式电子书。
+一个在线 EPUB 电子书制作应用，使用 React 18 和 TypeScript 构建。轻松创建、编辑和导出专业级的 EPUB 3 格式电子书。
 
 [立即体验](https://kukurii.github.io/epub-maker/) | [报告 Bug](https://github.com/kukurii/epub-maker/issues) | [提交建议](https://github.com/kukurii/epub-maker/issues)
 
@@ -17,13 +17,13 @@
 
 ## ✨ 主要功能
 
-### 📖 章节管理
+### 📖 书库与章节管理
+- **多书并行**：书库里的每本书独立保存，切换书时无需来回导入导出；支持新建、复制、重命名、删除。
 - **可视化编辑**：使用功能齐全的富文本编辑器编写内容。
 - **灵活结构**：支持多级章节嵌套，自动生成符合标准的目录（NCX/Nav）。
 - **拖拽排序**：通过直观的界面轻松调整书籍结构。
 
-### 🎨 智能封面设计
-- **AI 赋能**：集成 Google Gemini API，根据书籍描述一键生成创意封面。
+### 🎨 封面设计
 - **深度自定义**：内置设计工具，支持调整文字布局、字体、渐变背景及特效。
 - **实时预览**：所见即所得，确保导出效果完美。
 
@@ -31,20 +31,32 @@
 - 支持标准 EPUB 元数据，包括标题、作者、出版社、语言、描述及标签，提升书籍在阅读器中的识别度。
 
 ### 🖼️ 资源管理
-- **媒体库**：集中管理图片资源（JPG, PNG, WebP, SVG）。
-- **文件管理**：支持上传字体、CSS 或其他辅助文件，高度定制阅读体验。
+- **媒体库**：集中管理图片资源（JPG, PNG, WebP, SVG），并统计每张图被哪些章节引用。
+- **文件管理**：以资源管理器视图查看导出的 EPUB 内部结构，支持上传字体、CSS 或其他辅助文件。
+
+### 🧭 两级导航
+- 侧边栏参考 VS Code：左侧是只放图标的一级活动栏（书库 / 内容 / 设计 / 发布），
+  右侧是可整体收起的二级面板。点击已激活的一级分组即可收起/展开面板，收起状态会被记住。
+
+### 🌗 深色 / 浅色主题
+- 活动栏左下角（「导出」上方）有一键切换开关，单击即可在深浅之间切换。
+- 首次进入跟随系统偏好；用户手动切过一次之后，改为跟随用户的选择，不再被系统改动覆盖，
+  选择记录在 `localStorage`（`epub-maker-theme`），刷新后依然生效。
+- 悬浮提示为自绘层（跟随主题配色），替代系统绘制的原生 `title` 提示 —— 后者在深色模式下
+  会渲染成看不清的纯黑框。
 
 ---
 
 ## 🚀 技术栈
 
-- **核心框架**: [React 19](https://react.dev/)
+- **核心框架**: [React 18](https://react.dev/)
 - **开发语言**: [TypeScript](https://www.typescriptlang.org/)
 - **构建工具**: [Vite 6](https://vitejs.dev/)
 - **核心组件**:
+  - **TipTap**: 富文本编辑器。
   - **JSZip**: 处理 EPUB 容器生成。
-  - **Lucide React**: 优美的图标库。
-  - **@google/genai**: 驱动 AI 封面生成。
+  - **Lucide React**: 图标库。
+  - **localforage**: 书库与书稿的本地持久化。
 
 ---
 
@@ -63,16 +75,25 @@
    npm install
    ```
 
-3. **配置 API (可选)**
-   创建 `.env.local` 文件以启用 AI 功能：
-   ```env
-   VITE_GEMINI_API_KEY=你的密钥
-   ```
-
-4. **运行**
+3. **运行**
    ```bash
    npm run dev
    ```
+
+### 测试
+
+浏览器回归测试基于 `playwright-core`（使用本机已安装的 Chromium/Chrome/Edge；
+找不到浏览器时会跳过而不是误报失败）：
+
+```bash
+npm run test:library    # 书库：多书隔离、复制/重命名/删除、旧数据迁移
+npm run test:nav        # 两级可收回导航（活动栏 + 侧边面板）
+npm run test:theme      # 主题开关位置、跟随系统/记住用户选择、悬浮提示层
+npm run test:pill       # 自动保存胶囊不遮挡编辑器底栏
+npm run test:reading    # 记住上次阅读位置
+npm run test:editor     # 点击页边距时的光标定位
+npm run test:roundtrip  # 导出产物可被重新导入
+```
 
 ---
 

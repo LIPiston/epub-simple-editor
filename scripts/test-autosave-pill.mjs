@@ -39,7 +39,7 @@ window.__seed = async () => {
     chapters: [{ id: 'ch1', title: '第一章', content: CONTENT, level: 1, subItems: [] }],
     images: [], extraFiles: [], cover: null, coverId: null, coverCustomCSS: '',
     activeStyleId: 'classic', isPresetStyleActive: true, customCSS: '',
-    coverGeneratorState: { selectedBgImageId: null, activeTemplateIndex: 0, showTextOnCover: true, aiCoverPrompt: '' },
+    coverGeneratorState: { selectedBgImageId: null, activeTemplateIndex: 0, showTextOnCover: true },
   });
 };
 
@@ -163,10 +163,22 @@ await page.evaluate(() => window.__seed());
 await page.evaluate(() => window.__mount());
 await page.waitForFunction(() => !document.body.innerText.includes('正在恢复上次的项目'), null, { timeout: 20000 });
 
-// 切到「目录管理」（编辑器视图）
+// 切到「目录管理」（编辑器视图）。
+// 两级导航下「目录管理」在「内容」分组里，需先展开该一级分组再点二级项。
 await page.evaluate(() => {
-  const btn = Array.from(document.querySelectorAll('button')).find((b) => b.textContent.includes('目录管理'));
-  btn.click();
+  const item = document.querySelector('[data-nav-level="2"][data-nav-id="chapters"]');
+  if (item) return item.click();
+  const group = Array.from(document.querySelectorAll('[data-nav-level="1"]')).find((b) =>
+    (b.getAttribute('data-nav-views') || '').split(',').includes('chapters'),
+  );
+  if (!group) throw new Error('找不到含「目录管理」的一级分组');
+  group.click();
+});
+await page.waitForTimeout(400);
+await page.evaluate(() => {
+  const item = document.querySelector('[data-nav-level="2"][data-nav-id="chapters"]');
+  if (!item) throw new Error('找不到二级菜单项 chapters');
+  item.click();
 });
 await page.waitForFunction(() => document.querySelector('.ProseMirror'), null, { timeout: 20000 });
 await page.waitForTimeout(800);

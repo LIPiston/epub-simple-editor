@@ -12,7 +12,9 @@
     "test:editor": "node scripts/test-editor-caret.mjs",
     "test:reading": "node scripts/test-reading-position.mjs",
     "test:pill": "node scripts/test-autosave-pill.mjs",
-    "test:library": "node scripts/test-library.mjs"
+    "test:library": "node scripts/test-library.mjs",
+    "test:nav": "node scripts/test-navigation.mjs",
+    "test:theme": "node scripts/test-theme.mjs"
   },
   "dependencies": {
     "@tiptap/extension-heading": "^3.20.1",
