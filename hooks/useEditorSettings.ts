@@ -12,7 +12,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 
-export type EditorTheme = 'white' | 'green' | 'dark';
+export type EditorTheme = 'white' | 'orange' | 'dark';
 export type FontSize = 'small' | 'base' | 'medium' | 'large';
 
 interface EditorSettings {

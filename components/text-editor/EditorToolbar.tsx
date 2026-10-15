@@ -133,7 +133,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   }, []);
 
   if (!editor) {
-    return <div className="min-h-[48px] md:min-h-[56px] bg-white border-b border-gray-200 animate-pulse" />;
+    return <div className="min-h-[48px] md:min-h-[56px] bg-white border-b border-gray-200 animate-pulse dark:bg-gray-900 dark:border-gray-800" />;
   }
 
   // ─── 编辑操作 ───
@@ -191,11 +191,11 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
 
   return (
     <>
-      <div className="relative z-50 flex-none min-h-12 md:min-h-14 bg-white border-b border-gray-200 px-2 md:px-3 flex items-center justify-between shadow-sm">
+      <div className="relative z-50 flex-none min-h-12 md:min-h-14 bg-white border-b border-gray-200 px-2 md:px-3 flex items-center justify-between shadow-sm dark:bg-gray-900 dark:border-gray-800">
         <div className="flex items-center flex-1 overflow-x-auto gap-0.5 scrollbar-none min-w-0">
           {/* 移动端返回按钮 */}
           {onMobileBack && (
-            <div className="md:hidden flex items-center mr-1 pr-1 border-r border-gray-200">
+            <div className="md:hidden flex items-center mr-1 pr-1 border-r border-gray-200 dark:border-gray-800">
               <ToolbarButton icon={<ArrowLeft size={18} />} onClick={onMobileBack} title="返回目录" />
             </div>
           )}
@@ -329,7 +329,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
             {/* 插入图片 */}
             <button
               onClick={onOpenImagePicker}
-              className="flex items-center px-2 md:px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-xs md:text-sm font-medium transition-colors"
+              className="flex items-center px-2 md:px-3 py-1.5 bg-orange-50 text-orange-600 hover:bg-orange-100 rounded-lg text-xs md:text-sm font-medium transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
               title="插入图片"
             >
               <ImageIcon size={14} className="md:mr-1.5" />
@@ -344,8 +344,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 title="插入分割线"
                 className={`flex items-center px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   showDividerMenu
-                    ? 'bg-gray-200 text-gray-800'
-                    : 'bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-800 border border-gray-200'
+                    ? 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100'
+                    : 'bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-100 dark:border-gray-700'
                 }`}
               >
                 <SeparatorHorizontal size={14} className="lg:mr-1" />
@@ -361,7 +361,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={onSplit}
-            className="flex items-center px-2 md:px-3 py-1.5 bg-orange-50 text-orange-600 hover:bg-orange-100 rounded-lg text-xs md:text-sm font-medium transition-colors"
+            className="flex items-center px-2 md:px-3 py-1.5 bg-orange-50 text-orange-600 hover:bg-orange-100 rounded-lg text-xs md:text-sm font-medium transition-colors dark:bg-orange-950 dark:text-orange-300 dark:hover:bg-orange-900"
             title="在光标处拆分章节"
           >
             <Scissors size={13} className="md:mr-1.5" />
@@ -373,7 +373,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
             <button
               onClick={() => setShowMoreMenu((v) => !v)}
               className={`p-1.5 rounded-lg transition-colors ${
-                showMoreMenu ? 'bg-gray-200 text-gray-800' : 'text-gray-500 hover:bg-gray-100'
+                showMoreMenu ? 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100' : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-600'
               }`}
               title="更多工具"
             >
@@ -383,11 +383,11 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
         </div>
 
         {/* 查找按钮（固定在右侧）*/}
-        <div className="flex items-center flex-shrink-0 ml-2 pl-2 border-l border-gray-200">
+        <div className="flex items-center flex-shrink-0 ml-2 pl-2 border-l border-gray-200 dark:border-gray-800">
           <button
             onClick={() => onToggleFindBar(!showFindBar)}
             className={`p-1.5 md:p-2 rounded-lg transition-colors ${
-              showFindBar ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'
+              showFindBar ? 'bg-orange-100 text-orange-700 dark:bg-gray-800 dark:text-gray-200' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700'
             }`}
             title="查找与替换 (Ctrl+F)"
           >
@@ -401,7 +401,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
         <div
           id="editor-divider-menu"
           style={{ position: 'fixed', top: dividerMenuStyle.top, left: dividerMenuStyle.left }}
-          className="z-[120] bg-white border border-gray-200 rounded-xl shadow-xl p-2 flex gap-1.5 animate-in fade-in zoom-in-95 duration-150"
+          className="z-[120] bg-white border border-gray-200 rounded-md p-2 flex gap-1.5 animate-in fade-in zoom-in-95 duration-150 dark:bg-gray-900 dark:border-gray-700"
         >
           {DIVIDERS.map(({ label, cls, preview }, index) => (
             <button
@@ -412,9 +412,9 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 setShowDividerMenu(false);
               }}
               title={label}
-              className="flex flex-col items-center gap-1 px-2.5 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-700 text-gray-600 transition-colors group"
+              className="flex flex-col items-center gap-1 px-2.5 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-700 text-gray-600 transition-colors group dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-200"
             >
-              <span className="text-xs font-bold text-gray-400 group-hover:text-blue-500">{index + 1}</span>
+              <span className="text-xs font-bold text-gray-400 group-hover:text-orange-500 dark:text-gray-500 dark:group-hover:text-gray-300">{index + 1}</span>
               <span className="text-[11px] whitespace-nowrap">{preview}</span>
             </button>
           ))}
@@ -427,7 +427,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
         <div
           id="editor-more-menu"
           style={{ position: 'fixed', top: moreMenuStyle.top, left: moreMenuStyle.left }}
-          className="z-[120] bg-white border border-gray-200 rounded-xl shadow-xl p-3 w-48 animate-in fade-in zoom-in-95 duration-150"
+          className="z-[120] bg-white border border-gray-200 rounded-md p-3 w-48 animate-in fade-in zoom-in-95 duration-150 dark:bg-gray-900 dark:border-gray-700"
         >
           <div className="space-y-1">
             <MenuButton
@@ -477,7 +477,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               onClick={() => { editor.chain().focus().clearNodes().unsetAllMarks().run(); setShowMoreMenu(false); }}
             />
 
-            <div className="border-t border-gray-200 my-2" />
+            <div className="border-t border-gray-200 my-2 dark:border-gray-700" />
 
             <MenuButton
               icon={<AlignLeft size={16} />}
@@ -498,7 +498,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
               active={editor.isActive({ textAlign: 'right' })}
             />
 
-            <div className="border-t border-gray-200 my-2" />
+            <div className="border-t border-gray-200 my-2 dark:border-gray-700" />
 
             <MenuButton
               icon={<SeparatorHorizontal size={16} />}
@@ -528,12 +528,12 @@ const ToolbarButton: React.FC<{
     onClick={onClick}
     title={title}
     disabled={disabled}
-    className={`p-1.5 rounded-lg transition-all duration-200 flex-shrink-0 ${className} ${
+    className={`p-1.5 rounded-md transition-all duration-200 flex-shrink-0 ${className} ${
       disabled
-        ? 'opacity-30 cursor-not-allowed text-gray-400'
+        ? 'opacity-30 cursor-not-allowed text-gray-400 dark:text-gray-500'
         : active
-          ? 'bg-blue-100 text-blue-700 shadow-sm'
-          : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
+          ? 'bg-orange-100 text-orange-700 dark:bg-gray-800 dark:text-gray-200'
+          : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-100'
     }`}
   >
     {icon}
@@ -545,7 +545,7 @@ const ButtonGroup: React.FC<{ children: React.ReactNode; className?: string }> =
 );
 
 const Divider: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <div className={`h-5 w-px bg-gray-200 mx-0.5 flex-shrink-0 ${className}`} />
+  <div className={`h-5 w-px bg-gray-200 mx-0.5 flex-shrink-0 dark:bg-gray-700 ${className}`} />
 );
 
 const MenuButton: React.FC<{
@@ -558,8 +558,8 @@ const MenuButton: React.FC<{
     onClick={onClick}
     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm ${
       active
-        ? 'bg-blue-50 text-blue-700 font-medium'
-        : 'text-gray-700 hover:bg-gray-50'
+        ? 'bg-orange-50 text-orange-700 font-medium dark:bg-gray-700 dark:text-gray-200'
+        : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800'
     }`}
   >
     <span className="flex-shrink-0">{icon}</span>

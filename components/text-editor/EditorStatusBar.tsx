@@ -54,16 +54,16 @@ const EditorStatusBar: React.FC<EditorStatusBarProps> = ({
   onToggleReadingMemory,
 }) => {
   return (
-    <div className="flex-none h-10 bg-white border-t border-gray-100 flex items-center justify-between px-4 md:px-6 text-xs text-gray-500 select-none z-20">
+    <div className="flex-none h-10 bg-white border-t border-gray-100 flex items-center justify-between px-4 md:px-6 text-xs text-gray-500 select-none z-20 dark:bg-gray-900 dark:border-gray-800 dark:text-gray-400">
       {/* 左侧：统计信息 */}
       <div className="flex items-center space-x-3 md:space-x-6">
-        <span className="flex items-center font-medium text-gray-400">
-          <AlignJustify size={14} className="mr-2 text-gray-300 transform rotate-90" />
+        <span className="flex items-center font-medium text-gray-400 dark:text-gray-500">
+          <AlignJustify size={14} className="mr-2 text-gray-300 transform rotate-90 dark:text-gray-600" />
           <span className="hidden xs:inline">字数：</span>
           {charCount.toLocaleString()}
         </span>
-        <span className="hidden sm:flex items-center font-medium text-gray-400">
-          <Clock size={14} className="mr-2 text-gray-300" />
+        <span className="hidden sm:flex items-center font-medium text-gray-400 dark:text-gray-500">
+          <Clock size={14} className="mr-2 text-gray-300 dark:text-gray-600" />
           约 {readingTime} 分钟
         </span>
       </div>
@@ -74,8 +74,8 @@ const EditorStatusBar: React.FC<EditorStatusBarProps> = ({
           onClick={onToggleReadingMemory}
           className={`flex items-center rounded-lg border px-2 py-1.5 transition-colors ${
             readingMemoryEnabled
-              ? 'border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100'
-              : 'border-gray-200 bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600'
+              ? 'border-orange-200 bg-orange-50 text-orange-600 hover:bg-orange-100 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+              : 'border-gray-200 bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-500 dark:hover:bg-gray-600 dark:hover:text-gray-300'
           }`}
           title={
             readingMemoryEnabled
@@ -89,22 +89,22 @@ const EditorStatusBar: React.FC<EditorStatusBarProps> = ({
           </span>
         </button>
 
-        <span className="hidden sm:inline text-gray-400 text-xs mr-1">字体：</span>
-        <div className="flex items-center bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
+        <span className="hidden sm:inline text-gray-400 text-xs mr-1 dark:text-gray-500">字体：</span>
+        <div className="flex items-center bg-gray-50 rounded-lg border border-gray-200 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
           <button
             onClick={onDecreaseFontSize}
             disabled={!canDecrease}
             className={`p-1.5 transition-colors ${
               canDecrease
-                ? 'hover:bg-gray-100 text-gray-600 hover:text-gray-800'
-                : 'opacity-30 cursor-not-allowed text-gray-400'
+                ? 'hover:bg-gray-100 text-gray-600 hover:text-gray-800 dark:hover:bg-gray-700 dark:text-gray-400 dark:hover:text-gray-100'
+                : 'opacity-30 cursor-not-allowed text-gray-400 dark:text-gray-500'
             }`}
             title="减小字体 (Ctrl + -)"
           >
             <Minus size={14} />
           </button>
 
-          <span className="px-2 text-xs font-medium text-gray-700 border-x border-gray-200 min-w-[3rem] text-center">
+          <span className="px-2 text-xs font-medium text-gray-700 border-x border-gray-200 min-w-[3rem] text-center dark:text-gray-300 dark:border-gray-700">
             <span className="hidden sm:inline">{FONT_SIZE_LABEL[fontSize]}</span>
             <Type size={14} className="sm:hidden inline" />
           </span>
@@ -114,8 +114,8 @@ const EditorStatusBar: React.FC<EditorStatusBarProps> = ({
             disabled={!canIncrease}
             className={`p-1.5 transition-colors ${
               canIncrease
-                ? 'hover:bg-gray-100 text-gray-600 hover:text-gray-800'
-                : 'opacity-30 cursor-not-allowed text-gray-400'
+                ? 'hover:bg-gray-100 text-gray-600 hover:text-gray-800 dark:hover:bg-gray-700 dark:text-gray-400 dark:hover:text-gray-100'
+                : 'opacity-30 cursor-not-allowed text-gray-400 dark:text-gray-500'
             }`}
             title="增大字体 (Ctrl + +)"
           >

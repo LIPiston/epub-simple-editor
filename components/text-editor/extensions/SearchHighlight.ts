@@ -69,10 +69,10 @@ export const buildHighlightDecorations = (
   const decorations = matches.map((match, index) => {
     const isActive = index === activeIndex;
     return Decoration.inline(match.from, match.to, {
-      // 激活项用橙色，其他用黄色
+      // 激活项用橙色，其余匹配项用浅橙（界面只保留橙/红两色）
       style: isActive
         ? 'background-color: #fb923c; color: white; border-radius: 2px;'
-        : 'background-color: #fef08a; color: #1a1a1a; border-radius: 2px;',
+        : 'background-color: #fed7aa; color: #1a1a1a; border-radius: 2px;',
       // 用 class 方便 CSS 覆盖
       class: isActive ? 'search-highlight-active' : 'search-highlight',
     });

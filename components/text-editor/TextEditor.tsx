@@ -294,8 +294,8 @@ const TextEditor: React.FC<TextEditorProps> = ({
     if (!element) return;
 
     element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    element.classList.add('bg-yellow-100', 'transition-colors', 'duration-1000');
-    setTimeout(() => element.classList.remove('bg-yellow-100'), 1500);
+    element.classList.add('bg-orange-100', 'transition-colors', 'duration-1000');
+    setTimeout(() => element.classList.remove('bg-orange-100'), 1500);
   }, [focusRequest?.anchorId, focusRequest?.key]);
 
   // ─── 外部跳转：图片引用 ───
@@ -306,8 +306,8 @@ const TextEditor: React.FC<TextEditorProps> = ({
     if (!element) return;
 
     element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    element.classList.add('ring-4', 'ring-amber-300', 'transition-all', 'duration-1000');
-    setTimeout(() => element.classList.remove('ring-4', 'ring-amber-300'), 1500);
+    element.classList.add('ring-4', 'ring-orange-300', 'transition-all', 'duration-1000');
+    setTimeout(() => element.classList.remove('ring-4', 'ring-orange-300'), 1500);
   }, [focusRequest?.imageId, focusRequest?.key]);
 
   // ─── 外部跳转：搜索文本 ───
@@ -442,8 +442,8 @@ const TextEditor: React.FC<TextEditorProps> = ({
       fontSizeValue <= 18 ? 'max-w-[680px] md:max-w-[760px] lg:max-w-[800px]' :
       'max-w-[720px] md:max-w-[800px] lg:max-w-[840px]';
 
-    return `relative mx-auto w-full ${maxWidthClass} bg-white ring-1 ring-gray-900/5 shadow-xl
-      min-h-screen p-4 md:p-8 lg:p-12 xl:p-16 cursor-text transition-all rounded-xl flex flex-col`;
+    return `relative mx-auto w-full ${maxWidthClass} bg-white ring-1 ring-gray-900/5
+      min-h-screen p-4 md:p-8 lg:p-12 xl:p-16 cursor-text transition-all rounded-md flex flex-col dark:bg-gray-900 dark:text-gray-100 dark:ring-white/10`;
   }, [editorSettings]);
 
   // ─── 编辑器内容样式（根据字体设置）───
@@ -454,7 +454,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
 
   // ─── 渲染 ───
   return (
-    <div className="flex flex-col h-full bg-[#F9FAFB] relative overflow-hidden min-w-0">
+    <div className="flex flex-col h-full bg-[#f9f9f9] relative overflow-hidden min-w-0 dark:bg-gray-950">
       {/* 工具栏 */}
       <EditorToolbar
         editor={editor}
@@ -489,7 +489,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
       )}
 
       {/* 编辑器正文区 */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-slate-50 p-2 md:p-4 lg:p-8 scroll-smooth">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-gray-50 p-2 md:p-4 lg:p-8 scroll-smooth dark:bg-gray-950">
         <EditorPaper
           editor={editor}
           chapterTitle={chapterTitle}
