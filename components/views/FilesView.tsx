@@ -225,208 +225,232 @@ const FilesView: React.FC<FilesViewProps> = ({ onProjectUpdate, onChaptersLoaded
     };
 
     return (
-        <div className="p-4 md:p-10 flex flex-col items-center justify-center h-full bg-[#F5F5F7] overflow-y-auto">
-            <div className="bg-white/80 backdrop-blur-md p-6 md:p-10 rounded-2xl md:rounded-[2.5rem] shadow-2xl border border-white/50 max-w-4xl w-full text-center transition-all">
-                <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 text-blue-600">
-                    <BookOpen size={32} className="md:w-10 md:h-10" />
+        <div className="flex h-full flex-col bg-gray-50 overflow-hidden dark:bg-gray-900">
+            {/* 紧凑工具栏 */}
+            <div className="flex-none border-b border-gray-200 bg-white px-3 py-2 dark:border-gray-800 dark:bg-gray-900">
+                <div className="flex items-center gap-2">
+                    <h1 className="text-sm font-semibold text-gray-900 dark:text-gray-100">文件导入</h1>
+                    <span className="text-xs text-gray-400 dark:text-gray-500">解析并将内容替换到当前书籍</span>
                 </div>
+            </div>
 
-                <h2 className="text-2xl md:text-3xl font-bold mb-2 md:mb-3 text-gray-900 tracking-tight">
-                    开始创作
-                </h2>
-                <p className="text-gray-500 mb-6 md:mb-10 font-medium text-sm md:text-base">
-                    选择一个入口或拖入文件开始您的电子书制作之旅。
-                </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-10">
+            <div className="flex-1 overflow-y-auto p-3">
+                {/* 四个导入入口 */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                     {/* TXT Import */}
                     <label
-                        className={`relative block w-full cursor-pointer group rounded-3xl transition-all duration-300 ${dragActive === 'txt' ? 'ring-4 ring-gray-400 scale-105 shadow-2xl' : 'active:scale-95'
-                            }`}
+                        className={`relative block w-full cursor-pointer rounded-md border transition-colors ${
+                            dragActive === 'txt'
+                                ? 'border-gray-400 ring-2 ring-gray-300 dark:border-gray-500 dark:ring-gray-600'
+                                : 'border-gray-200 hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-700'
+                        }`}
                         onDragEnter={(e) => handleDragEnter(e, 'txt')}
                         onDragLeave={handleDragLeave}
                         onDragOver={handleDragOver}
                         onDrop={(e) => handleDrop(e, 'txt')}
                     >
                         <input type="file" accept=".txt" onChange={handleTxtUpload} className="hidden" />
-                        <div className={`w-full min-h-[140px] md:min-h-[180px] p-4 md:p-6 rounded-3xl shadow-xl flex flex-col items-center justify-center transition-colors border-2 border-transparent ${dragActive === 'txt' ? 'bg-gray-800 border-gray-500' : 'bg-gray-900 hover:bg-black'
-                            } text-white`}>
-                            {dragActive === 'txt' ? (
-                                <Cloud size={32} className="mb-4 text-white animate-bounce" />
-                            ) : (
-                                <FileType size={32} className="mb-2 md:mb-4 text-gray-400 group-hover:text-white transition-colors" />
-                            )}
-                            <span className="font-bold text-base md:text-lg mb-1">{dragActive === 'txt' ? '释放以导入 TXT' : '导入 TXT'}</span>
-                            <span className="text-[10px] opacity-60">自动切分章节</span>
+                        <div className="flex h-16 items-center gap-2.5 rounded-md bg-gray-50 px-3 dark:bg-gray-950">
+                            {dragActive === 'txt'
+                                ? <Cloud size={18} className="flex-none text-gray-900 animate-bounce dark:text-gray-100" />
+                                : <FileType size={18} className="flex-none text-gray-900 dark:text-gray-100" />}
+                            <div className="min-w-0">
+                                <div className="truncate text-xs font-semibold text-gray-900 dark:text-gray-100">导入 TXT</div>
+                                <div className="truncate text-[11px] text-gray-500 dark:text-gray-400">
+                                    {dragActive === 'txt' ? '释放以导入' : '自动切分章节'}
+                                </div>
+                            </div>
                         </div>
                     </label>
 
                     {/* Single EPUB Import */}
                     <label
-                        className={`relative block w-full cursor-pointer group rounded-3xl transition-all duration-300 ${dragActive === 'epub' ? 'ring-4 ring-blue-300 scale-105 shadow-2xl' : 'active:scale-95'
-                            }`}
+                        className={`relative block w-full cursor-pointer rounded-md border transition-colors ${
+                            dragActive === 'epub'
+                                ? 'border-orange-400 ring-2 ring-orange-300 dark:border-gray-600 dark:ring-gray-700'
+                                : 'border-orange-200 hover:border-orange-300 dark:border-gray-700 dark:hover:border-gray-600'
+                        }`}
                         onDragEnter={(e) => handleDragEnter(e, 'epub')}
                         onDragLeave={handleDragLeave}
                         onDragOver={handleDragOver}
                         onDrop={(e) => handleDrop(e, 'epub')}
                     >
                         <input type="file" accept=".epub" onChange={handleEpubUpload} className="hidden" />
-                        <div className={`w-full min-h-[140px] md:min-h-[180px] p-4 md:p-6 rounded-3xl shadow-xl flex flex-col items-center justify-center transition-colors border-2 border-transparent ${dragActive === 'epub' ? 'bg-blue-500 border-white/30' : 'bg-blue-600 hover:bg-blue-700'
-                            } text-white`}>
-                            {dragActive === 'epub' ? (
-                                <Cloud size={32} className="mb-4 text-white animate-bounce" />
-                            ) : (
-                                <BookOpen size={32} className="mb-2 md:mb-4 text-blue-200 group-hover:text-white transition-colors" />
-                            )}
-                            <span className="font-bold text-base md:text-lg mb-1">{dragActive === 'epub' ? '释放以解析 EPUB' : '导入 EPUB'}</span>
-                            <span className="text-[10px] opacity-60">解析现有电子书</span>
+                        <div className="flex h-16 items-center gap-2.5 rounded-md bg-orange-50 px-3 dark:bg-gray-700">
+                            {dragActive === 'epub'
+                                ? <Cloud size={18} className="flex-none text-orange-600 animate-bounce dark:text-gray-300" />
+                                : <BookOpen size={18} className="flex-none text-orange-600 dark:text-gray-300" />}
+                            <div className="min-w-0">
+                                <div className="truncate text-xs font-semibold text-orange-700 dark:text-gray-200">导入 EPUB</div>
+                                <div className="truncate text-[11px] text-orange-600/70 dark:text-gray-300/70">
+                                    {dragActive === 'epub' ? '释放以解析' : '解析现有电子书'}
+                                </div>
+                            </div>
                         </div>
                     </label>
 
                     {/* HTML Import */}
                     <label
-                        className={`relative block w-full cursor-pointer group rounded-3xl transition-all duration-300 ${dragActive === 'html' ? 'ring-4 ring-green-300 scale-105 shadow-2xl' : 'active:scale-95'
-                            }`}
+                        className={`relative block w-full cursor-pointer rounded-md border transition-colors ${
+                            dragActive === 'html'
+                                ? 'border-orange-400 ring-2 ring-orange-300 dark:border-orange-500 dark:ring-orange-800'
+                                : 'border-orange-200 hover:border-orange-300 dark:border-orange-800 dark:hover:border-orange-700'
+                        }`}
                         onDragEnter={(e) => handleDragEnter(e, 'html')}
                         onDragLeave={handleDragLeave}
                         onDragOver={handleDragOver}
                         onDrop={(e) => handleDrop(e, 'html')}
                     >
                         <input type="file" accept=".html,.htm" onChange={handleHtmlUpload} className="hidden" />
-                        <div className={`w-full min-h-[140px] md:min-h-[180px] p-4 md:p-6 rounded-3xl shadow-xl flex flex-col items-center justify-center transition-colors border-2 border-transparent ${dragActive === 'html' ? 'bg-green-500 border-white/30' : 'bg-green-600 hover:bg-green-700'
-                            } text-white`}>
-                            {dragActive === 'html' ? (
-                                <Cloud size={32} className="mb-4 text-white animate-bounce" />
-                            ) : (
-                                <FileCode size={32} className="mb-2 md:mb-4 text-green-200 group-hover:text-white transition-colors" />
-                            )}
-                            <span className="font-bold text-base md:text-lg mb-1">{dragActive === 'html' ? '释放以导入 HTML' : '导入 HTML'}</span>
-                            <span className="text-[10px] opacity-60">智能识别结构</span>
+                        <div className="flex h-16 items-center gap-2.5 rounded-md bg-orange-50 px-3 dark:bg-orange-950">
+                            {dragActive === 'html'
+                                ? <Cloud size={18} className="flex-none text-orange-600 animate-bounce dark:text-orange-400" />
+                                : <FileCode size={18} className="flex-none text-orange-600 dark:text-orange-400" />}
+                            <div className="min-w-0">
+                                <div className="truncate text-xs font-semibold text-orange-700 dark:text-orange-300">导入 HTML</div>
+                                <div className="truncate text-[11px] text-orange-600/70 dark:text-orange-400/70">
+                                    {dragActive === 'html' ? '释放以导入' : '智能识别结构'}
+                                </div>
+                            </div>
                         </div>
                     </label>
 
                     {/* Batch EPUB Merge */}
                     <label
-                        className={`relative block w-full cursor-pointer group rounded-3xl transition-all duration-300 ${dragActive === 'batch' ? 'ring-4 ring-indigo-300 scale-105 shadow-2xl' : 'active:scale-95'
-                            }`}
+                        className={`relative block w-full cursor-pointer rounded-md border transition-colors ${
+                            dragActive === 'batch'
+                                ? 'border-orange-400 ring-2 ring-orange-300 dark:border-gray-600 dark:ring-gray-700'
+                                : 'border-orange-200 hover:border-orange-300 dark:border-gray-700 dark:hover:border-gray-600'
+                        }`}
                         onDragEnter={(e) => handleDragEnter(e, 'batch')}
                         onDragLeave={handleDragLeave}
                         onDragOver={handleDragOver}
                         onDrop={(e) => handleDrop(e, 'batch')}
                     >
                         <input type="file" accept=".epub" multiple onChange={handleBatchEpubUpload} className="hidden" />
-                        <div className={`w-full min-h-[140px] md:min-h-[180px] p-4 md:p-6 rounded-3xl shadow-xl flex flex-col items-center justify-center transition-all border border-white/10 ${dragActive === 'batch'
-                            ? 'bg-gradient-to-br from-indigo-500 to-purple-500 border-white/30'
-                            : 'bg-gradient-to-br from-indigo-600 to-purple-600 hover:shadow-indigo-500/30 shadow-2xl'
-                            } text-white`}>
-                            {dragActive === 'batch' ? (
-                                <Cloud size={32} className="mb-4 text-white animate-bounce" />
-                            ) : (
-                                <Library size={32} className="mb-2 md:mb-4 text-indigo-200 group-hover:text-white transition-colors" />
-                            )}
-                            <span className="font-bold text-base md:text-lg mb-1">{dragActive === 'batch' ? '释放以批量合并' : '批量合并'}</span>
-                            <span className="text-[10px] opacity-60">多卷合一模式</span>
+                        <div className="flex h-16 items-center gap-2.5 rounded-md bg-orange-50 px-3 dark:bg-gray-700">
+                            {dragActive === 'batch'
+                                ? <Cloud size={18} className="flex-none text-orange-600 animate-bounce dark:text-gray-300" />
+                                : <Library size={18} className="flex-none text-orange-600 dark:text-gray-300" />}
+                            <div className="min-w-0">
+                                <div className="truncate text-xs font-semibold text-orange-700 dark:text-gray-200">批量合并</div>
+                                <div className="truncate text-[11px] text-orange-600/70 dark:text-gray-300/70">
+                                    {dragActive === 'batch' ? '释放以批量合并' : '多卷合一模式'}
+                                </div>
+                            </div>
                         </div>
                     </label>
                 </div>
 
-                <div className="border-t border-gray-100 pt-6">
-                    <button onClick={() => setShowSplitSettings(!showSplitSettings)} className="text-xs font-semibold text-gray-400 flex items-center justify-center w-full hover:text-blue-600 transition-colors">
-                        <Settings2 size={14} className="mr-1.5" /> {showSplitSettings ? '收起高级设置' : '高级导入设置'}
+                {/* 解析选项：紧凑设置区 */}
+                <div className="mt-3 overflow-hidden rounded-md border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+                    <button
+                        onClick={() => setShowSplitSettings(!showSplitSettings)}
+                        className="flex w-full items-center gap-1.5 px-3 py-2 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50 hover:text-orange-600 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+                    >
+                        <Settings2 size={14} />
+                        {showSplitSettings ? '收起高级设置' : '高级导入设置'}
+                        <ChevronDown
+                            size={14}
+                            className={`ml-auto text-gray-400 transition-transform dark:text-gray-500 ${showSplitSettings ? 'rotate-180' : ''}`}
+                        />
                     </button>
+
                     {showSplitSettings && (
-                        <div className="mt-6 text-left bg-gray-50 p-5 rounded-2xl border border-gray-200 animate-in slide-in-from-top-2">
-                            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">TXT 章节切分正则 (Regex)</label>
-                            <div className="flex flex-col md:flex-row gap-2">
+                        <div className="border-t border-gray-200 px-3 py-2 dark:border-gray-800">
+                            <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                                TXT 章节切分正则 (Regex)
+                            </label>
+                            <div className="mt-1.5 flex flex-col gap-2 md:flex-row">
                                 <input
                                     type="text"
-                                    className="flex-1 font-mono text-xs bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-blue-600 focus:ring-2 focus:ring-blue-500 outline-none shadow-inner w-full"
+                                    className="h-7 w-full flex-1 rounded-md border border-gray-200 bg-white px-2 font-mono text-xs text-orange-600 outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400/40 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
                                     value={splitRegex}
                                     onChange={(e) => setSplitRegex(e.target.value)}
                                 />
-                                <button onClick={() => setSplitRegex("^\\s*(Chapter\\s+\\d+|第[0-9一二三四五六七八九十百千]+[章回节]|序章|尾声|引子|[（(][0-9一二三四五六七八九十百千]+[)）])")} className="px-3 py-2 text-[10px] bg-gray-200 hover:bg-gray-300 text-gray-600 rounded-xl transition-colors font-bold whitespace-nowrap">恢复默认</button>
+                                <button onClick={() => setSplitRegex("^\\s*(Chapter\\s+\\d+|第[0-9一二三四五六七八九十百千]+[章回节]|序章|尾声|引子|[（(][0-9一二三四五六七八九十百千]+[)）])")} className="h-7 whitespace-nowrap rounded-md border border-gray-200 bg-white px-2 text-[11px] font-medium text-gray-600 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700">恢复默认</button>
                             </div>
-                            <p className="text-[10px] text-gray-400 mt-2 mb-4 leading-relaxed">系统将使用此规则扫描 TXT 文件并创建新章节。</p>
+                            <p className="mt-1.5 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">系统将使用此规则扫描 TXT 文件并创建新章节。</p>
                         </div>
                     )}
 
-
-
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 pt-3 border-t border-gray-200">EPUB 解析选项</label>
-                    <div className="space-y-2">
-                        <label className="flex items-center gap-3 cursor-pointer group bg-white hover:bg-blue-50/60 border border-gray-200 hover:border-blue-200 rounded-xl px-4 py-3 transition-all">
-                            <input type="checkbox" checked={cleanHtml} onChange={e => setCleanHtml(e.target.checked)} className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 shrink-0 transition-colors" />
-                            <div className="text-left text-xs">
-                                <span className="font-semibold text-gray-700 group-hover:text-blue-600 transition-colors">清洗旧版 HTML 格式</span>
-                                <p className="text-gray-400 mt-0.5 leading-relaxed">强力移除无用的 {`<br>, <span>, <style>`} 等多余标签，使导入的内容更加纯净。</p>
-                            </div>
-                        </label>
-                        <label className="flex items-center gap-3 cursor-pointer group bg-white hover:bg-blue-50/60 border border-gray-200 hover:border-blue-200 rounded-xl px-4 py-3 transition-all">
-                            <input type="checkbox" checked={removeImages} onChange={e => setRemoveImages(e.target.checked)} className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 shrink-0 transition-colors" />
-                            <div className="text-left text-xs">
-                                <span className="font-semibold text-gray-700 group-hover:text-blue-600 transition-colors">移除章节内页原配图片</span>
-                                <p className="text-gray-400 mt-0.5 leading-relaxed">解决某些旧电子书每一章开头都带一张相同的超巨大封面，导致文件体积爆炸的问题。</p>
-                            </div>
-                        </label>
+                    <div className="border-t border-gray-200 px-3 py-2 dark:border-gray-800">
+                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">EPUB 解析选项</label>
+                        <div className="mt-1.5 divide-y divide-gray-100 dark:divide-gray-800">
+                            <label className="group flex cursor-pointer items-start gap-2 py-1.5">
+                                <input type="checkbox" checked={cleanHtml} onChange={e => setCleanHtml(e.target.checked)} className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded-sm border-gray-300 text-orange-600 transition-colors focus:ring-orange-500 dark:border-gray-600" />
+                                <div className="min-w-0 text-left text-xs">
+                                    <span className="font-medium text-gray-700 transition-colors group-hover:text-orange-600 dark:text-gray-300 dark:group-hover:text-gray-300">清洗旧版 HTML 格式</span>
+                                    <p className="mt-0.5 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">强力移除无用的 {`<br>, <span>, <style>`} 等多余标签，使导入的内容更加纯净。</p>
+                                </div>
+                            </label>
+                            <label className="group flex cursor-pointer items-start gap-2 py-1.5">
+                                <input type="checkbox" checked={removeImages} onChange={e => setRemoveImages(e.target.checked)} className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded-sm border-gray-300 text-orange-600 transition-colors focus:ring-orange-500 dark:border-gray-600" />
+                                <div className="min-w-0 text-left text-xs">
+                                    <span className="font-medium text-gray-700 transition-colors group-hover:text-orange-600 dark:text-gray-300 dark:group-hover:text-gray-300">移除章节内页原配图片</span>
+                                    <p className="mt-0.5 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">解决某些旧电子书每一章开头都带一张相同的超巨大封面，导致文件体积爆炸的问题。</p>
+                                </div>
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Batch Merge Options Modal */}
             {showBatchModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] flex flex-col overflow-hidden animate-in zoom-in-95">
-                        <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="flex max-h-[80vh] w-full max-w-lg flex-col overflow-hidden rounded-md border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+                        <div className="flex items-center justify-between border-b border-gray-200 bg-white px-3 py-2 dark:border-gray-800 dark:bg-gray-900">
                             <div>
-                                <h3 className="text-lg font-bold text-gray-900">批量合并选项</h3>
-                                <p className="text-xs text-gray-500 mt-1">请选择一本主书，合并后将使用该书的封面和元数据。</p>
+                                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">批量合并选项</h3>
+                                <p className="mt-0.5 text-[11px] text-gray-400 dark:text-gray-500">请选择一本主书，合并后将使用该书的封面和元数据。</p>
                             </div>
-                            <button onClick={() => setShowBatchModal(false)} className="text-gray-400 hover:text-gray-600 bg-gray-100/50 hover:bg-gray-200/50 p-2 rounded-full transition-colors">
-                                <X size={20} />
+                            <button onClick={() => setShowBatchModal(false)} className="inline-flex h-7 w-7 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:text-gray-500 dark:hover:bg-gray-700 dark:hover:text-gray-200">
+                                <X size={16} />
                             </button>
                         </div>
-                        <div className="p-4 overflow-y-auto flex-1 space-y-2">
+                        <div className="flex-1 space-y-1 overflow-y-auto p-2">
                             {batchFiles.map((file, idx) => (
-                                <label key={idx} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${primaryFileIndex === idx ? 'border-indigo-500 bg-indigo-50/50 shadow-sm' : 'border-gray-200 hover:border-indigo-200 hover:bg-gray-50'}`}>
+                                <label key={idx} className={`flex cursor-pointer items-center gap-2 rounded-md border px-2 py-1.5 transition-colors ${primaryFileIndex === idx ? 'border-orange-300 bg-orange-50 dark:border-gray-600 dark:bg-gray-800' : 'border-gray-200 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-700'}`}>
                                     <input
                                         type="radio"
                                         name="primaryBook"
                                         checked={primaryFileIndex === idx}
                                         onChange={() => setPrimaryFileIndex(idx)}
-                                        className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                                        className="h-3.5 w-3.5 shrink-0 border-gray-300 text-orange-600 focus:ring-orange-500 dark:border-gray-600"
                                     />
-                                    <div className="flex-1 min-w-0">
-                                        <p className={`text-sm truncate font-medium ${primaryFileIndex === idx ? 'text-indigo-900' : 'text-gray-700'}`}>{file.name}</p>
+                                    <div className="min-w-0 flex-1">
+                                        <p className={`truncate text-[13px] font-medium ${primaryFileIndex === idx ? 'text-orange-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-300'}`}>{file.name}</p>
                                     </div>
-                                    {primaryFileIndex === idx && <span className="text-xs font-bold text-indigo-600 bg-indigo-100 px-2 py-1 rounded-md">主书本</span>}
+                                    {primaryFileIndex === idx && <span className="flex-none rounded-sm bg-orange-100 px-1.5 py-0.5 text-[10px] font-medium text-orange-700 dark:bg-gray-700 dark:text-gray-200">主书本</span>}
 
-                                    <div className="flex items-center gap-1 border-l pl-2 border-gray-100/50">
+                                    <div className="flex flex-none items-center gap-0.5 border-l border-gray-100 pl-1.5 dark:border-gray-800">
                                         <button
                                             type="button"
                                             onClick={(e) => handleMoveBatchFile(idx, 'up', e)}
                                             disabled={idx === 0}
-                                            className={`p-1.5 rounded-lg transition-colors ${idx === 0 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'}`}
+                                            className={`inline-flex h-6 w-6 items-center justify-center rounded-md transition-colors ${idx === 0 ? 'cursor-not-allowed opacity-20' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200'}`}
                                             title="上移"
                                         >
-                                            <ChevronUp size={16} />
+                                            <ChevronUp size={14} />
                                         </button>
                                         <button
                                             type="button"
                                             onClick={(e) => handleMoveBatchFile(idx, 'down', e)}
                                             disabled={idx === batchFiles.length - 1}
-                                            className={`p-1.5 rounded-lg transition-colors ${idx === batchFiles.length - 1 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'}`}
+                                            className={`inline-flex h-6 w-6 items-center justify-center rounded-md transition-colors ${idx === batchFiles.length - 1 ? 'cursor-not-allowed opacity-20' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200'}`}
                                             title="下移"
                                         >
-                                            <ChevronDown size={16} />
+                                            <ChevronDown size={14} />
                                         </button>
                                     </div>
                                 </label>
                             ))}
                         </div>
-                        <div className="p-5 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
+                        <div className="flex justify-end gap-2 border-t border-gray-200 bg-white px-3 py-2 dark:border-gray-800 dark:bg-gray-900">
                             <button
                                 onClick={() => setShowBatchModal(false)}
-                                className="px-5 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl transition-colors"
+                                className="inline-flex h-7 items-center rounded-md border border-gray-200 bg-white px-2.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
                             >
                                 取消
                             </button>
@@ -435,7 +459,7 @@ const FilesView: React.FC<FilesViewProps> = ({ onProjectUpdate, onChaptersLoaded
                                     setShowBatchModal(false);
                                     processBatchFiles(batchFiles, primaryFileIndex);
                                 }}
-                                className="px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md shadow-indigo-600/20 transition-all active:scale-95"
+                                className="inline-flex h-7 items-center rounded-md bg-orange-600 px-2.5 text-xs font-medium text-white transition-colors hover:bg-orange-700 dark:bg-gray-600 dark:hover:bg-gray-500"
                             >
                                 开始合并
                             </button>
