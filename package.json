@@ -15,7 +15,6 @@
     "test:library": "node scripts/test-library.mjs"
   },
   "dependencies": {
-    "@google/genai": "latest",
     "@tiptap/extension-heading": "^3.20.1",
     "@tiptap/extension-horizontal-rule": "^3.20.1",
     "@tiptap/extension-image": "^3.20.1",

@@ -51,8 +51,7 @@ export const getInitialState = (): ProjectData => ({
     coverGeneratorState: {
         selectedBgImageId: null,
         activeTemplateIndex: 0,
-        showTextOnCover: true,
-        aiCoverPrompt: ''
+        showTextOnCover: true
     },
     customTocTitle: undefined,
     customTocXhtml: undefined

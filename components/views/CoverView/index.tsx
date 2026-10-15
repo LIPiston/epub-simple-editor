@@ -1,8 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import * as htmlToImage from 'html-to-image';
 import { ProjectData, CoverDesign, ImageAsset, CoverGeneratorState } from '../../../types';
-import { Upload, Camera, Type, Check, Code, Loader2, Sparkles, Library, X, ChevronDown, ChevronUp, Palette, Plus, Settings2, Info } from 'lucide-react';
-import { useAiGeneration } from '../../../hooks/useAiGeneration';
+import { Upload, Camera, Type, Check, Code, Loader2, Library, X, ChevronDown, ChevronUp, Palette, Plus, Settings2, Info } from 'lucide-react';
 
 interface CoverGeneratorProps {
   project: ProjectData;
@@ -175,20 +174,11 @@ const CoverGenerator: React.FC<CoverGeneratorProps> = ({
   const [activeTemplate, setActiveTemplate] = useState(coverGeneratorState?.activeTemplateIndex ?? 0);
   const [selectedBgImageId, setSelectedBgImageId] = useState<string | null>(coverGeneratorState?.selectedBgImageId || null);
   const [showTextOnCover, setShowTextOnCover] = useState(coverGeneratorState?.showTextOnCover !== undefined ? coverGeneratorState.showTextOnCover : true);
-  const [aiCoverPrompt, setAiCoverPrompt] = useState(coverGeneratorState?.aiCoverPrompt || '');
   const [selectedBgImage, setSelectedBgImage] = useState<string | null>(null);
 
   // --- Snippet Modal State ---
   const [activeSnippet, setActiveSnippet] = useState<SnippetTemplate | null>(null);
   const [snippetValues, setSnippetValues] = useState<Record<string, any>>({});
-
-  // 🔧 使用 AI 生成 Hook
-  const aiGeneration = useAiGeneration({
-    onSuccess: (result) => {
-      onUpdateCoverCSS(result);
-      setShowCssEditor(true); // 自动显示编辑器查看结果
-    }
-  });
 
   // Resolve Background Image Data on Mount or ID Change
   useEffect(() => {
@@ -230,11 +220,6 @@ const CoverGenerator: React.FC<CoverGeneratorProps> = ({
     const nextIdx = activeTemplate === idx ? -1 : idx;
     setActiveTemplate(nextIdx);
     onUpdateGeneratorState?.({ activeTemplateIndex: nextIdx });
-  };
-
-  const handleSetAiPrompt = (val: string) => {
-    setAiCoverPrompt(val);
-    onUpdateGeneratorState?.({ aiCoverPrompt: val });
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -321,25 +306,6 @@ const CoverGenerator: React.FC<CoverGeneratorProps> = ({
         setStatus('idle');
       }
     }
-  };
-
-  const handleAiGenerateCoverCss = async () => {
-    if (!aiCoverPrompt || aiGeneration.loading) return;
-
-    const fullPrompt = `
-      You are an expert book cover designer. Generate CSS code to style a book cover based on the user's request.
-      You should only provide CSS rules. Do not include explanations or markdown backticks.
-      The HTML structure is a main div with id #cover-preview, containing an h1 with id #cover-title and an h2 with id #cover-author.
-
-      User's request: "${aiCoverPrompt}"
-
-      Generate the CSS code now. For example:
-      #cover-preview { background: linear-gradient(45deg, #1d2b64, #f8cdda); }
-      #cover-title { font-family: 'Garamond', serif; color: white; text-shadow: 2px 2px 5px black; }
-      #cover-author { font-style: italic; color: #e0e0e0; }
-      `;
-
-    await aiGeneration.generate(fullPrompt);
   };
 
   // --- Snippet Logic ---
@@ -513,15 +479,6 @@ const CoverGenerator: React.FC<CoverGeneratorProps> = ({
                   <button key={idx} onClick={() => handleSetActiveTemplate(idx)} className={`h-12 w-full rounded-lg border-2 transition-all flex items-center justify-center text-xs font-medium ${activeTemplate === idx ? 'border-blue-500 ring-2 ring-blue-100 shadow-md' : 'border-gray-200 hover:border-blue-300'}`}><span className={`w-3 h-3 rounded-full mr-2 border border-black/10 ${t.bg}`}></span>{t.name}</button>
                 ))}
               </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100 space-y-3">
-              <h4 className="text-sm font-semibold text-gray-600 flex items-center"><Sparkles size={16} className="mr-2 text-yellow-500" /> AI 封面设计</h4>
-              <textarea className="w-full h-20 bg-white/70 text-sm p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none shadow-inner" placeholder="例如：黑暗奇幻风格，标题用破碎的哥特字体..." value={aiCoverPrompt} onChange={(e) => handleSetAiPrompt(e.target.value)} />
-              <button onClick={handleAiGenerateCoverCss} disabled={aiGeneration.loading || !aiCoverPrompt} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-lg flex items-center justify-center transition-all shadow-md shadow-blue-500/20 active:scale-95 font-semibold text-xs disabled:bg-blue-300 disabled:cursor-not-allowed">
-                {aiGeneration.loading ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Sparkles size={14} className="mr-2" />}
-                {aiGeneration.loading ? '生成中...' : '生成样式'}
-              </button>
             </div>
 
             <div className="border-t border-gray-100 pt-4">

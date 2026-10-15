@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Sparkles, Loader2, Code, Settings, X, Key, Plus, ChevronDown, ChevronUp, BookTemplate, Info, ArrowRight, ExternalLink } from 'lucide-react';
+import React, { useState } from 'react';
+import { Code, X, Plus, ChevronDown, ChevronUp, BookTemplate, Info, ArrowRight } from 'lucide-react';
 import { ProjectData, Chapter } from '../../types';
-import { useAiGeneration } from '../../hooks/useAiGeneration';
 import { contentToEditorHTML } from '../text-editor/editorHelpers';
 import { getTocTitle } from '../../services/toc';
 import { PRESET_STYLES } from '../../themes';
@@ -174,74 +173,13 @@ pre {
 ];
 
 const StylesView: React.FC<StylesViewProps> = ({ project, activeChapter, onUpdateProject }) => {
-    const [aiPrompt, setAiPrompt] = useState('');
     const [stylePreviewMode, setStylePreviewMode] = useState<'chapter' | 'toc'>('chapter');
     const [showSnippets, setShowSnippets] = useState(false);
-    const [showApiConfig, setShowApiConfig] = useState(false);
-    const [userApiKey, setUserApiKey] = useState('');
 
     // Snippet Info Modal State
     const [infoSnippet, setInfoSnippet] = useState<SnippetItem | null>(null);
 
     const isPresetActive = project.isPresetStyleActive !== false;
-
-    // 🔧 使用 AI 生成 Hook
-    const aiGeneration = useAiGeneration({
-        apiKey: userApiKey,
-        onSuccess: (result) => {
-            onUpdateProject({ customCSS: result });
-        }
-    });
-
-    useEffect(() => {
-        const storedKey = localStorage.getItem('epub_maker_gemini_key');
-        if (storedKey) {
-            setUserApiKey(storedKey);
-        }
-    }, []);
-
-    const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = e.target.value;
-        setUserApiKey(val);
-        localStorage.setItem('epub_maker_gemini_key', val);
-    };
-
-    const handleAiGenerateCss = async () => {
-        if (!aiPrompt || aiGeneration.loading) return;
-
-        const activeStyle = PRESET_STYLES.find(s => s.id === project.activeStyleId) || PRESET_STYLES[0];
-        const baseCssForContext = isPresetActive ? activeStyle.css : '/* No base theme active. Generate from scratch. */ body { font-family: sans-serif; }';
-
-        const fullPrompt = `
-        You are an expert ebook developer and designer specializing in CSS for EPUB 3 files.
-        Your task is to generate CSS code based on a user's request to style a book's content.
-        The user is working with a base stylesheet. You should generate *only* the additional or overriding CSS code.
-        Do not wrap the code in markdown backticks like \`\`\`css.
-
-        Strict Rules for EPUB:
-        1. **Images**: Always ensure images are responsive inside the EPUB reader. Use \`max-width: 100%; height: auto;\` to prevent horizontal scrolling.
-        2. **Layout**: Avoid fixed pixel widths for containers. Use percentages or \`em/rem\` units to support various screen sizes (phones to tablets).
-        3. **Typography**: Ensure high readability. Avoid extremely small fonts. Use relative units (\`em\` or \`rem\`) for font sizes so they scale with user settings.
-        4. **Theme**: Capture the overall mood described by the user (e.g., "vintage", "sci-fi", "romance").
-
-        Focus on:
-        - Typography (font-family, size, line-height, text-indent).
-        - Headings (h1, h2).
-        - Images (img styling, borders, shadows, filters).
-        - Blockquotes and decorative dividers (hr).
-
-        Base CSS for context:
-        \`\`\`css
-        ${baseCssForContext}
-        \`\`\`
-
-        User's request: "${aiPrompt}"
-
-        Now, generate the custom CSS code.
-        `;
-
-        await aiGeneration.generate(fullPrompt);
-    };
 
     const insertSnippet = (code: string) => {
         const current = project.customCSS || '';
@@ -333,64 +271,6 @@ const StylesView: React.FC<StylesViewProps> = ({ project, activeChapter, onUpdat
                 </div>
 
                 <div className="flex-1 flex flex-col min-h-[300px]">
-                    <div className="relative">
-                        <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center justify-between">
-                            <div className="flex items-center">
-                                <Sparkles size={20} className="mr-2 text-yellow-500" /> AI 魔法样式
-                            </div>
-                            <button
-                                onClick={() => setShowApiConfig(!showApiConfig)}
-                                className={`p-1.5 rounded-lg transition-colors ${showApiConfig ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'}`}
-                                title="配置 Gemini API"
-                            >
-                                <Settings size={16} />
-                            </button>
-                        </h2>
-
-                        {/* API Config Popup */}
-                        {showApiConfig && (
-                            <div className="absolute top-10 right-0 z-50 w-72 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border border-gray-100 p-4 animate-in fade-in zoom-in-95 duration-200">
-                                <div className="flex justify-between items-center mb-3 border-b border-gray-100 pb-2">
-                                    <h4 className="text-xs font-bold text-gray-800 flex items-center">
-                                        <Key size={12} className="mr-1.5 text-blue-500" /> Gemini API Configuration
-                                    </h4>
-                                    <button onClick={() => setShowApiConfig(false)} className="text-gray-400 hover:text-gray-600"><X size={14} /></button>
-                                </div>
-                                <div className="space-y-3 mb-2">
-                                    <p className="text-[10px] text-gray-500 leading-relaxed">
-                                        请输入您的 Google Gemini API Key 以使用 AI 功能。
-                                    </p>
-                                    <input
-                                        type="password"
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-gray-300"
-                                        placeholder="sk-..."
-                                        value={userApiKey}
-                                        onChange={handleApiKeyChange}
-                                    />
-                                    <div className="flex justify-between items-center pt-2">
-                                        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-500 hover:underline flex items-center">
-                                            获取 API Key <ExternalLink size={10} className="ml-1" />
-                                        </a>
-                                        <button
-                                            onClick={() => setShowApiConfig(false)}
-                                            className="text-xs font-medium text-white bg-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors"
-                                        >
-                                            完成
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100 space-y-3 mb-6">
-                        <textarea className="w-full h-20 bg-white/70 text-sm p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none shadow-inner" placeholder="请用自然语言描述您想要的样式...&#10;例如：我想要复古羊皮纸的感觉，图片带一点棕褐色调。" value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} />
-                        <button onClick={handleAiGenerateCss} disabled={aiGeneration.loading || !aiPrompt} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-lg flex items-center justify-center transition-all shadow-md shadow-blue-500/20 active:scale-95 font-semibold text-sm disabled:bg-blue-300 disabled:cursor-not-allowed">
-                            {aiGeneration.loading ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Sparkles size={16} className="mr-2" />}
-                            {aiGeneration.loading ? '正在施展魔法...' : '生成样式'}
-                        </button>
-                    </div>
-
                     <div className="flex items-center justify-between mb-3 cursor-pointer group" onClick={() => setShowSnippets(!showSnippets)}>
                         <h2 className="text-xl font-bold text-gray-800 flex items-center"><Code size={20} className="mr-2 text-purple-500" /> 自定义 CSS</h2>
                         <button className="text-xs font-medium text-gray-500 flex items-center hover:text-blue-600 transition-colors">

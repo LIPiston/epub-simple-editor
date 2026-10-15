@@ -71,7 +71,6 @@ export interface CoverGeneratorState {
   selectedBgImageId: string | null;
   activeTemplateIndex: number;
   showTextOnCover: boolean;
-  aiCoverPrompt: string;
 }
 
 export interface ProjectData {
