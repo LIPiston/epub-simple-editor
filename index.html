@@ -4,9 +4,32 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>EPUB Maker - 专业电子书制作工具</title>
+    <!--
+      主题预设：必须在首屏绘制前同步执行，避免「先闪浅色再变深色」。
+      取不到用户选择时跟随系统；取得到就跟随用户（localStorage: epub-maker-theme）。
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('epub-maker-theme');
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var isDark = stored === 'dark' || stored === 'light' ? stored === 'dark' : prefersDark;
+          var root = document.documentElement;
+          root.classList.toggle('dark', isDark);
+          // 声明 color-scheme 有两个作用：
+          //   1. 让原生控件（滚动条、表单、以及 title 悬浮提示）跟随主题，
+          //      否则系统深色模式下原生提示会变成看不清的黑框；
+          //   2. 让浏览器知道本页自己处理了深色，不再强制反色（force-dark）。
+          root.style.colorScheme = isDark ? 'dark' : 'light';
+        } catch (e) {}
+      })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
+        // 主题由 <html class="dark"> 控制，而不是跟随系统媒体查询：
+        // 用户显式选择后必须能覆盖系统偏好。
+        darkMode: 'class',
         theme: {
           extend: {
             colors: {
@@ -24,6 +47,10 @@
       }
     </script>
     <style>
+      /* 未启用脚本时的兜底，同时确保首屏就声明了 color-scheme */
+      html { color-scheme: light; }
+      html.dark { color-scheme: dark; }
+
       /* 自定义滚动条 */
       ::-webkit-scrollbar {
         width: 8px;
@@ -42,6 +69,14 @@
         background: #94a3b8; 
         background-clip: content-box;
       }
+      html.dark ::-webkit-scrollbar-thumb {
+        background: #3f4650;
+        background-clip: content-box;
+      }
+      html.dark ::-webkit-scrollbar-thumb:hover {
+        background: #566070;
+        background-clip: content-box;
+      }
       
       body {
         -webkit-font-smoothing: antialiased;
@@ -54,10 +89,57 @@
       .editor-content p { margin-bottom: 1em; line-height: 1.6; }
       .editor-content img { max-width: 100%; height: auto; display: block; margin: 1em auto; }
 
+      /*
+        深色主题下的书写纸张。
+        书稿自身的主题 CSS 会通过 `.editor-paper { … }` 设置纸张底色与文字颜色
+        （见 utils/cssScoper.ts），在深色模式下若不覆盖，就会出现
+        「深色外壳 + 刺眼白纸」或「深底配深字」两种读不了的情况。
+        这里用 `html.dark` 提高特异性，稳定盖过书稿主题的 `.editor-paper` 规则。
+        注意：这只影响编辑区的书写面；「样式主题」里的预览 iframe 仍按书稿原样渲染，
+        所以在深色模式下依然能看到真实的排版效果。
+      */
+      html.dark .editor-paper {
+        background-color: #111827;
+        color: #e5e7eb;
+      }
+
+      /*
+        深色下，书稿里「浅底抠色」的元素都要改成深色纸张色。
+        各主题的分割线装饰用 `background:#fff`（或自身浅纸色）在线上挖出断口，
+        块引用 / 目录链接也带浅底（如 classic 的 blockquote #fafafa、fresh 的 .toc-link #fff）。
+        这些在深色纸张上会露成刺眼的白块。
+
+        为什么覆盖写在编辑区这一层，而不是直接改 themes/*.ts：
+        同一份主题 CSS 也用于导出 EPUB，读者的阅读器通常是白纸，那边的 `#fff`
+        是正确行为。改了主题文件会连导出结果一起改坏。
+      */
+      html.dark .editor-paper hr:after,
+      html.dark .editor-paper .divider-1:after,
+      html.dark .editor-paper .divider-2:after,
+      html.dark .editor-paper .divider-3:after,
+      html.dark .editor-paper .divider-4:after,
+      html.dark .editor-paper .divider-5:after {
+        background: #111827;
+        background-color: #111827;
+      }
+      html.dark .editor-paper blockquote,
+      html.dark .editor-paper .toc-link,
+      html.dark .editor-paper .toc-level-2 .toc-link {
+        background-color: rgba(255, 255, 255, 0.06);
+      }
+      /* 图片的「相框」底色/描边同样改成半透明白，保留装帧感又不刺眼 */
+      html.dark .editor-paper img {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.16);
+      }
+
       /* 背景装饰网格 */
       .pattern-grid {
         background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
         background-size: 24px 24px;
+      }
+      html.dark .pattern-grid {
+        background-image: radial-gradient(#30363d 1px, transparent 1px);
       }
     </style>
     <script type="importmap">
@@ -76,9 +158,9 @@
       }
     }
     </script>
-</head>
-  <body class="bg-[#F5F5F7] text-gray-900 h-screen overflow-hidden">
+  </head>
+  <body class="bg-[#F5F5F7] text-gray-900 dark:bg-gray-950 dark:text-gray-100 h-screen overflow-hidden">
     <div id="root" class="h-full"></div>
     <script type="module" src="./index.tsx"></script>
-</body>
+  </body>
 </html>
