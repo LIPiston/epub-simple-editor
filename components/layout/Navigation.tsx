@@ -28,7 +28,7 @@ interface NavigationProps {
   onToggleTheme: () => void;
 }
 
-const COLLAPSE_STORAGE_KEY = 'epub-maker-nav-collapsed';
+const COLLAPSE_STORAGE_KEY = 'epub-simple-editor-nav-collapsed';
 
 const Navigation: React.FC<NavigationProps> = ({
   currentView,

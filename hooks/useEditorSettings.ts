@@ -42,7 +42,7 @@ interface UseEditorSettingsReturn extends EditorSettings {
 }
 
 // ─── 常量 ───
-const STORAGE_KEY = 'epub-maker-editor-settings';
+const STORAGE_KEY = 'epub-simple-editor-editor-settings';
 
 const DEFAULT_SETTINGS: EditorSettings = {
   fontSize: 'base',

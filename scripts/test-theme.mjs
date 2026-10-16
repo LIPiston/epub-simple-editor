@@ -60,7 +60,7 @@ writeFileSync(
   <script>
     (function () {
       try {
-        var stored = localStorage.getItem('epub-maker-theme');
+        var stored = localStorage.getItem('epub-simple-editor-theme');
         var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         var isDark = stored === 'dark' || stored === 'light' ? stored === 'dark' : prefersDark;
         document.documentElement.classList.toggle('dark', isDark);
@@ -166,7 +166,7 @@ const readTheme = (page) =>
   page.evaluate(() => ({
     htmlDark: document.documentElement.classList.contains('dark'),
     colorScheme: document.documentElement.style.colorScheme,
-    stored: localStorage.getItem('epub-maker-theme'),
+    stored: localStorage.getItem('epub-simple-editor-theme'),
   }));
 
 // ─── 1. 开关位置：在左下角（活动栏底部，与「导出」同一簇）───
@@ -268,7 +268,7 @@ console.log('\n3. 单击切换，且选择被记录');
   record(
     '选择写进 localStorage',
     afterFirst.stored === 'dark',
-    `  epub-maker-theme=${JSON.stringify(afterFirst.stored)}`,
+    `  epub-simple-editor-theme=${JSON.stringify(afterFirst.stored)}`,
   );
   record(
     '同步了 color-scheme（原生控件/提示跟随主题）',
@@ -390,7 +390,7 @@ console.log('\n6. 深色模式下编辑器纸张与正文对比度');
       const lf = window.__localforage;
       const id = 'seed_paper';
       const now = Date.now();
-      await lf.setItem('epub_maker_book_' + id, {
+      await lf.setItem('epub_simple_editor_book_' + id, {
         metadata: { title: '纸张测试书', creator: '作者', language: 'zh', description: '', publisher: '', date: '2026-01-01' },
         chapters: [{ id: id + '_c1', title: '第一章', level: 1, subItems: [], content: '<h1>第一章</h1><h2>第一节</h2><p>正文内容，用来测量纸张与文字的对比度。</p>' }],
         images: [], extraFiles: [], cover: null, coverId: null, coverCustomCSS: '',
@@ -399,7 +399,7 @@ console.log('\n6. 深色模式下编辑器纸张与正文对比度');
         // 正是这条断言要钉住的回归。
         activeStyleId: 'minimal', isPresetStyleActive: true, customCSS: '',
       });
-      await lf.setItem('epub_maker_library_index_v1', {
+      await lf.setItem('epub_simple_editor_library_index_v1', {
         books: [{ id, title: '纸张测试书', author: '作者', chapterCount: 1, imageCount: 0, sizeBytes: 1024, createdAt: now, updatedAt: now }],
         activeBookId: id,
       });

@@ -7,7 +7,7 @@ const DEBOUNCE_TIME = 2000; // 增加到 2 秒，减少频繁保存
 /**
  * 自动保存当前书籍
  *
- * 改造为「按书保存」：写入当前书槽（epub_maker_book_<bookId>），
+ * 改造为「按书保存」：写入当前书槽（epub_simple_editor_book_<bookId>），
  * 而不是旧的单一 key。这样书库里每本书各存各的，切换书籍不会互相覆盖。
  *
  * @param project 当前书稿内存数据

@@ -47,8 +47,8 @@ interface ReadingState {
   legacyFlat?: BookReadingState;
 }
 
-const STORAGE_KEY = 'epub-maker-reading-position';
-const ENABLED_KEY = 'epub-maker-reading-position-enabled';
+const STORAGE_KEY = 'epub-simple-editor-reading-position';
+const ENABLED_KEY = 'epub-simple-editor-reading-position-enabled';
 
 /** 最多记住多少章的位置（每本书各自计数），避免长期使用后无限增长 */
 const MAX_CHAPTERS = 60;

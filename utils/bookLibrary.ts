@@ -5,8 +5,8 @@
  * 换一本书就得先把旧的导出、再清空、再导入新的 —— 这正是要解决的问题。
  *
  * 现在改为「一本书 = 一个独立的存储槽 + 一份索引」：
- *   - 索引   epub_maker_library_index_v1  → { books: LibraryBook[], activeBookId }
- *   - 书稿   epub_maker_book_<bookId>     → ProjectData
+ *   - 索引   epub_simple_editor_library_index_v1  → { books: LibraryBook[], activeBookId }
+ *   - 书稿   epub_simple_editor_book_<bookId>     → ProjectData
  *
  * 拆成索引 + 逐本存储，而不是把整库塞进一个 key：书稿里含 base64 图片，
  * 单本就可能很大；分开存可以让「打开某本」只读那一本，也避免一次写全部。
@@ -21,13 +21,13 @@ import { getInitialState, normalizeProject } from './projectDefaults';
 import { generateUniqueId } from './idGenerator';
 
 /** 书库索引（书目列表 + 当前打开的书） */
-const INDEX_KEY = 'epub_maker_library_index_v1';
+const INDEX_KEY = 'epub_simple_editor_library_index_v1';
 /** 单本书稿的 key 前缀 */
-const BOOK_KEY_PREFIX = 'epub_maker_book_';
+const BOOK_KEY_PREFIX = 'epub_simple_editor_book_';
 /** 单本书备份的 key 前缀 */
-const BACKUP_KEY_PREFIX = 'epub_maker_book_backup_';
+const BACKUP_KEY_PREFIX = 'epub_simple_editor_book_backup_';
 /** 旧版单项目 key，仅用于迁移 */
-const LEGACY_PROJECT_KEY = 'epub_maker_project_v1';
+const LEGACY_PROJECT_KEY = 'epub_simple_editor_project_v1';
 
 export interface LibraryBook {
   id: string;

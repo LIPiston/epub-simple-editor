@@ -12,12 +12,12 @@
     <title>EPUB Maker - 专业电子书制作工具</title>
     <!--
       主题预设：必须在首屏绘制前同步执行，避免「先闪浅色再变深色」。
-      取不到用户选择时跟随系统；取得到就跟随用户（localStorage: epub-maker-theme）。
+      取不到用户选择时跟随系统；取得到就跟随用户（localStorage: epub-simple-editor-theme）。
     -->
     <script>
       (function () {
         try {
-          var stored = localStorage.getItem('epub-maker-theme');
+          var stored = localStorage.getItem('epub-simple-editor-theme');
           var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
           var isDark = stored === 'dark' || stored === 'light' ? stored === 'dark' : prefersDark;
           var root = document.documentElement;

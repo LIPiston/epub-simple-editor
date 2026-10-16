@@ -34,7 +34,7 @@ const CONTENT = Array.from({ length: 40 }, (_, i) =>
 ).join('');
 
 window.__seed = async () => {
-  await localforage.setItem('epub_maker_project_v1', {
+  await localforage.setItem('epub_simple_editor_project_v1', {
     metadata: { title: 'T', creator: 'A', language: 'zh', description: '', publisher: '', date: '2026-01-01' },
     chapters: [{ id: 'ch1', title: '第一章', content: CONTENT, level: 1, subItems: [] }],
     images: [], extraFiles: [], cover: null, coverId: null, coverCustomCSS: '',

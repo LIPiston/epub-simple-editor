@@ -175,10 +175,10 @@ const clickView = async (page, viewId) => {
 const seedBook = (page, { title, chapterTitles }) =>
   page.evaluate(async ({ title, chapterTitles }) => {
     const lf = window.__localforage;
-    const index = (await lf.getItem('epub_maker_library_index_v1')) || { books: [], activeBookId: null };
+    const index = (await lf.getItem('epub_simple_editor_library_index_v1')) || { books: [], activeBookId: null };
     const id = 'seed_' + Math.random().toString(36).slice(2, 9);
     const now = Date.now();
-    await lf.setItem('epub_maker_book_' + id, {
+    await lf.setItem('epub_simple_editor_book_' + id, {
       metadata: { title, creator: '作者', language: 'zh', description: '', publisher: '', date: '2026-01-01' },
       chapters: chapterTitles.map((t, i) => ({
         id: id + '_ch' + i, title: t, content: `<h1>${t}</h1><p>正文。</p>`, level: 1, subItems: [],
@@ -191,7 +191,7 @@ const seedBook = (page, { title, chapterTitles }) =>
       ...index.books,
     ];
     if (!index.activeBookId) index.activeBookId = id;
-    await lf.setItem('epub_maker_library_index_v1', index);
+    await lf.setItem('epub_simple_editor_library_index_v1', index);
     return id;
   }, { title, chapterTitles });
 

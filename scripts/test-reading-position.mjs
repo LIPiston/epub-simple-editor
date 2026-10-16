@@ -261,7 +261,7 @@ const resetStorage = () =>
 
 const setEnabled = (enabled) =>
   page.evaluate((v) => {
-    localStorage.setItem('epub-maker-reading-position-enabled', String(v));
+    localStorage.setItem('epub-simple-editor-reading-position-enabled', String(v));
   }, enabled);
 
 const mountEditor = (chapterId) =>
@@ -292,7 +292,7 @@ const userScrollTo = async (top) => {
 };
 
 const readReadingState = () =>
-  page.evaluate(() => JSON.parse(localStorage.getItem('epub-maker-reading-position') || 'null'));
+  page.evaluate(() => JSON.parse(localStorage.getItem('epub-simple-editor-reading-position') || 'null'));
 
 // ─── 3. A. 开启后：滚动位置被记住并在重新挂载时恢复 ───
 console.log('A. 章节内滚动位置的保存与恢复');
@@ -393,7 +393,7 @@ console.log('\nC. 关闭开关清空已有记录');
   await page.waitForTimeout(150);
   const after = await readReadingState();
   const enabledFlag = await page.evaluate(() =>
-    localStorage.getItem('epub-maker-reading-position-enabled'),
+    localStorage.getItem('epub-simple-editor-reading-position-enabled'),
   );
 
   record(
@@ -414,7 +414,7 @@ const seedResume = (chapterId) =>
   page.evaluate(
     ([bid, cid]) => {
       localStorage.setItem(
-        'epub-maker-reading-position',
+        'epub-simple-editor-reading-position',
         JSON.stringify({ version: 2, books: { [bid]: { lastChapterId: cid, positions: {} } } }),
       );
     },
@@ -471,7 +471,7 @@ console.log('\nE. 滚动后立刻刷新（未等防抖到期）也不丢位置')
   await page.waitForFunction(() => typeof window.__mountProjectProbe === 'function', null, { timeout: 20000 });
 
   const saved = await page.evaluate(() => {
-    const raw = localStorage.getItem('epub-maker-reading-position');
+    const raw = localStorage.getItem('epub-simple-editor-reading-position');
     return raw ? JSON.parse(raw) : null;
   });
   const savedTop = saved?.books?.[TEST_BOOK_ID]?.positions?.ch1?.scrollTop ?? null;

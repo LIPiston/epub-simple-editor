@@ -186,10 +186,10 @@ const seedBook = (page) =>
       `<h2 id="ch-mid">中段小节</h2>` +
       paragraphs(70, '结尾');
 
-    const index = (await lf.getItem('epub_maker_library_index_v1')) || { books: [], activeBookId: null };
+    const index = (await lf.getItem('epub_simple_editor_library_index_v1')) || { books: [], activeBookId: null };
     const id = 'seed_mobile';
     const now = Date.now();
-    await lf.setItem('epub_maker_book_' + id, {
+    await lf.setItem('epub_simple_editor_book_' + id, {
       metadata: { title: '移动端样书', creator: '作者', language: 'zh', description: '', publisher: '', date: '2026-01-01' },
       chapters: [{ id: id + '_ch0', title: '第一章', content, level: 1, subItems: [] }],
       images: [], extraFiles: [], cover: null, coverId: null, coverCustomCSS: '',
@@ -200,7 +200,7 @@ const seedBook = (page) =>
       ...index.books,
     ];
     if (!index.activeBookId) index.activeBookId = id;
-    await lf.setItem('epub_maker_library_index_v1', index);
+    await lf.setItem('epub_simple_editor_library_index_v1', index);
   });
 
 /** 从书库「打开」当前书，进入编辑章节 */

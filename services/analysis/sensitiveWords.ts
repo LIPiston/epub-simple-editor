@@ -114,8 +114,8 @@ export const PRESET_PATTERNS: { label: string; pattern: string }[] = [
 
 // ─── 规则持久化 ───
 
-const STORAGE_KEY = 'epub_maker_sensitive_word_rules';
-const WORDBANK_KEY = 'epub_maker_sensitive_word_bank';
+const STORAGE_KEY = 'epub_simple_editor_sensitive_word_rules';
+const WORDBANK_KEY = 'epub_simple_editor_sensitive_word_bank';
 
 /** 从 localStorage 加载已保存的规则 */
 export const loadSavedRules = (): ReplaceRule[] => {

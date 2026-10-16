@@ -16,7 +16,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 export type Theme = 'light' | 'dark';
 
-export const THEME_STORAGE_KEY = 'epub-maker-theme';
+export const THEME_STORAGE_KEY = 'epub-simple-editor-theme';
 
 const SYSTEM_QUERY = '(prefers-color-scheme: dark)';
 

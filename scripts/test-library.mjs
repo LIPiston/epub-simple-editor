@@ -244,10 +244,10 @@ const gotoLibrary = async (page) => {
 const seedBook = async (page, { title, author, chapterTitles }) => {
   return page.evaluate(async ({ title, author, chapterTitles }) => {
     const lf = window.__localforage;
-    const index = (await lf.getItem('epub_maker_library_index_v1')) || { books: [], activeBookId: null };
+    const index = (await lf.getItem('epub_simple_editor_library_index_v1')) || { books: [], activeBookId: null };
     const id = 'seed_' + Math.random().toString(36).slice(2, 9);
     const now = Date.now();
-    await lf.setItem('epub_maker_book_' + id, {
+    await lf.setItem('epub_simple_editor_book_' + id, {
       metadata: { title, creator: author, language: 'zh', description: '', publisher: '', date: '2026-01-01' },
       chapters: chapterTitles.map((t, i) => ({
         id: id + '_ch' + i, title: t, content: `<h1>${t}</h1><p>${title} 的正文内容。</p>`, level: 1, subItems: [],
@@ -260,13 +260,13 @@ const seedBook = async (page, { title, author, chapterTitles }) => {
       ...index.books,
     ];
     if (!index.activeBookId) index.activeBookId = id;
-    await lf.setItem('epub_maker_library_index_v1', index);
+    await lf.setItem('epub_simple_editor_library_index_v1', index);
     return id;
   }, { title, author, chapterTitles });
 };
 
 const readIndex = (page) =>
-  page.evaluate(() => window.__localforage.getItem('epub_maker_library_index_v1'));
+  page.evaluate(() => window.__localforage.getItem('epub_simple_editor_library_index_v1'));
 
 /** 当前可见的书名卡片标题 */
 const cardTitles = (page) =>
@@ -400,10 +400,10 @@ console.log('\n3. 书籍数据互相独立');
 
   const stored = await page.evaluate(async () => {
     const lf = window.__localforage;
-    const index = await lf.getItem('epub_maker_library_index_v1');
+    const index = await lf.getItem('epub_simple_editor_library_index_v1');
     const out = {};
     for (const b of index.books) {
-      const book = await lf.getItem('epub_maker_book_' + b.id);
+      const book = await lf.getItem('epub_simple_editor_book_' + b.id);
       out[b.title] = (book?.chapters || []).map((c) => c.content).join('|');
     }
     return out;
@@ -505,7 +505,7 @@ console.log('\n5. 旧版数据迁移（老用户不丢稿）');
   const page = await newPage();
   // 写入旧版 key（模拟升级前的存档），并清掉书库索引
   await page.evaluate(async () => {
-    await window.__localforage.setItem('epub_maker_project_v1', {
+    await window.__localforage.setItem('epub_simple_editor_project_v1', {
       metadata: { title: '旧版遗留的书', creator: '老作者', language: 'zh', description: '', publisher: '', date: '2025-01-01' },
       chapters: [{ id: 'legacy_c1', title: '旧章一', content: '<h1>旧章一</h1><p>旧版正文</p>', level: 1, subItems: [] }],
       images: [], extraFiles: [], cover: null, activeStyleId: 'classic', isPresetStyleActive: true, customCSS: '',
@@ -531,7 +531,7 @@ console.log('\n5. 旧版数据迁移（老用户不丢稿）');
 
   // 旧 key 不应被删除（迁移有误时用户原稿仍可找回）
   const legacyStillThere = await page.evaluate(async () =>
-    !!(await window.__localforage.getItem('epub_maker_project_v1')),
+    !!(await window.__localforage.getItem('epub_simple_editor_project_v1')),
   );
   record('迁移不删除旧数据（可回退）', legacyStillThere, `  旧 key 是否保留=${legacyStillThere}`);
   await page.close();
@@ -543,7 +543,7 @@ console.log('\n6. 阅读位置按书籍隔离（副本与原书不串位）');
   // 通过真实 UI 路径验证：开启记忆 → 在甲书滚动 → 切到乙书滚动 → 两处位置都记下，
   // 且互不覆盖。复制出的副本章节 id 与原书相同，正是最容易串位的场景。
   const page = await newPage();
-  await page.evaluate(() => localStorage.setItem('epub-maker-reading-position-enabled', 'true'));
+  await page.evaluate(() => localStorage.setItem('epub-simple-editor-reading-position-enabled', 'true'));
 
   // 两本书都放足够长的正文，保证可以滚动
   const longText = Array.from({ length: 60 }, (_, i) => `<p>第 ${i + 1} 段正文，写长一些以便产生滚动空间。</p>`).join('');
@@ -552,9 +552,9 @@ console.log('\n6. 阅读位置按书籍隔离（副本与原书不串位）');
   await page.evaluate(async ({ a, b, text }) => {
     const lf = window.__localforage;
     for (const id of [a, b]) {
-      const book = await lf.getItem('epub_maker_book_' + id);
+      const book = await lf.getItem('epub_simple_editor_book_' + id);
       book.chapters[0].content = '<h1>长章</h1>' + text;
-      await lf.setItem('epub_maker_book_' + id, book);
+      await lf.setItem('epub_simple_editor_book_' + id, book);
     }
   }, { a: bookA, b: bookB, text: longText });
 
@@ -602,7 +602,7 @@ console.log('\n6. 阅读位置按书籍隔离（副本与原书不串位）');
   await scrollTo(1000);
 
   const state = await page.evaluate(() => {
-    const raw = localStorage.getItem('epub-maker-reading-position');
+    const raw = localStorage.getItem('epub-simple-editor-reading-position');
     return raw ? JSON.parse(raw) : null;
   });
 
