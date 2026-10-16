@@ -18,6 +18,7 @@ import {
   ListTree,
   Package,
   Palette,
+  UploadCloud,
 } from 'lucide-react';
 import { ViewMode } from '../../types';
 
@@ -72,7 +73,10 @@ export const NAV_GROUPS: NavGroup[] = [
     id: 'publish',
     label: '发布',
     icon: Package,
-    views: [{ id: 'structure', label: '文件管理', icon: Package }],
+    views: [
+      { id: 'structure', label: '文件管理', icon: Package },
+      { id: 'sync', label: '云同步', icon: UploadCloud },
+    ],
   },
 ];
 

@@ -9,6 +9,7 @@ import StylesView from '../views/StylesView';
 import ImagesView from '../views/ImagesView';
 import StructureView from '../views/StructureView';
 import LibraryView from '../views/LibraryView';
+import SyncView from '../views/SyncView';
 import { LibraryBook } from '../../utils/bookLibrary';
 import { BookOpen, GripVertical } from 'lucide-react';
 import { useResizableSidebar } from '../../hooks/useResizableSidebar';
@@ -241,6 +242,9 @@ const ViewContainer: React.FC<ViewContainerProps> = ({
       />;
     case 'structure':
       return <StructureView project={project} onUpdateProject={onUpdateProject} />;
+    case 'sync':
+      // 云同步是整库级别的操作，与「当前这本书」无关，因此不需要 project 等入参
+      return <SyncView />;
     default:
       return <div>Unknown view</div>;
   }

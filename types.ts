@@ -98,4 +98,5 @@ export type ViewMode =
   | 'styles'
   | 'images'
   | 'cover'
-  | 'structure';
+  | 'structure'
+  | 'sync';
