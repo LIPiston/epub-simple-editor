@@ -1,15 +1,15 @@
-# 📚 EPUB Maker (EPUB 制作工具)
+# 📚 EPUB Simple Editor (EPUB 制作工具)
 
 <div align="center">
 
-![GitHub Stars](https://img.shields.io/github/stars/kukurii/epub-maker?style=flat-square)
-![GitHub Forks](https://img.shields.io/github/forks/kukurii/epub-maker?style=flat-square)
-![GitHub License](https://img.shields.io/github/license/kukurii/epub-maker?style=flat-square)
-![Deployment Status](https://img.shields.io/github/deployments/kukurii/epub-maker/github-pages?label=deploy&style=flat-square)
+![GitHub Stars](https://img.shields.io/github/stars/LIPiston/epub-simple-editor?style=flat-square)
+![GitHub Forks](https://img.shields.io/github/forks/LIPiston/epub-simple-editor?style=flat-square)
+![GitHub License](https://img.shields.io/github/license/LIPiston/epub-simple-editor?style=flat-square)
+![Deployment Status](https://img.shields.io/github/deployments/LIPiston/epub-simple-editor/github-pages?label=deploy&style=flat-square)
 
 一个在线 EPUB 电子书制作应用，使用 React 18 和 TypeScript 构建。轻松创建、编辑和导出专业级的 EPUB 3 格式电子书。
 
-[立即体验](https://kukurii.github.io/epub-maker/) | [报告 Bug](https://github.com/kukurii/epub-maker/issues) | [提交建议](https://github.com/kukurii/epub-maker/issues)
+[立即体验](https://lipiston.github.io/epub-simple-editor/) | [报告 Bug](https://github.com/LIPiston/epub-simple-editor/issues) | [提交建议](https://github.com/LIPiston/epub-simple-editor/issues)
 
 </div>
 
@@ -53,7 +53,7 @@
 ### 🌗 深色 / 浅色主题
 - 活动栏左下角（「导出」上方）有一键切换开关，单击即可在深浅之间切换。
 - 首次进入跟随系统偏好；用户手动切过一次之后，改为跟随用户的选择，不再被系统改动覆盖，
-  选择记录在 `localStorage`（`epub-maker-theme`），刷新后依然生效。
+  选择记录在 `localStorage`（`epub-simple-editor-theme`），刷新后依然生效。
 - 悬浮提示为自绘层（跟随主题配色），替代系统绘制的原生 `title` 提示 —— 后者在深色模式下
   会渲染成看不清的纯黑框。
 
@@ -78,8 +78,8 @@
 
 1. **克隆项目**
    ```bash
-   git clone https://github.com/kukurii/epub-maker.git
-   cd epub-maker
+   git clone https://github.com/LIPiston/epub-simple-editor.git
+   cd epub-simple-editor
    ```
 
 2. **安装依赖**
@@ -112,6 +112,20 @@ npm run test:roundtrip  # 导出产物可被重新导入
 
 ---
 
+## 🙏 来源说明
+
+本项目基于 [kukurii/epub-maker](https://github.com/kukurii/epub-maker) 修改而来，
+原作者为 [kukurii](https://github.com/kukurii)。在原项目基础上做了以下方向的调整：
+
+- 书库与多书管理（按书隔离存储、复制/重命名/删除）
+- VS Code 式两级可收回导航，以及移动端左右抽屉与边缘滑动手势
+- 深色 / 浅色主题与自绘悬浮提示
+- 编辑器光标定位与 EPUB 导入转义的若干修复
+
+原项目的 MIT 授权与署名一并保留，详见 [LICENSE](LICENSE)。
+
+---
+
 ## 🤝 贡献与反馈
 
 欢迎任何形式的贡献！无论是代码提交、功能建议还是文档改进。
@@ -126,10 +140,13 @@ npm run test:roundtrip  # 导出产物可被重新导入
 
 ## 📄 许可证
 
-本项目基于 [MIT License](LICENSE) 开源。
+本项目基于 [MIT License](LICENSE) 开源，采用双署名：
+
+- Copyright (c) 2026 kukurii（epub-maker 原作者）
+- Copyright (c) 2026 LIPiston（本项目修改）
 
 ---
 
 <div align="center">
-Made with ❤️ by kukurii
+Made with ❤️ by LIPiston，基于 <a href="https://github.com/kukurii/epub-maker">kukurii/epub-maker</a>
 </div>

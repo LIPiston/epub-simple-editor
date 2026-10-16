@@ -24,3 +24,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+# ZCode 工具产物
+.zcode/
