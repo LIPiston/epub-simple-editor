@@ -33,14 +33,18 @@ export function buildScopedCSS(
       outline: none !important;
       min-height: 100%;
       height: 100%;
-      caret-color: #3b82f6;
+      /* 光标用项目调色板里的橙色；此前的蓝色是遗留配色，与本应用「只保留灰阶、
+         橙色、红色」的约束冲突（见 scripts/test-theme.mjs 第 7 组）。 */
+      caret-color: #f97316;
     }
 
     .editor-paper p.caption {
       text-indent: 0;
       text-align: center;
       font-size: 0.9em;
-      color: #6b7280;
+      /* 用项目重定义后的中性灰 gray-500；此前的冷灰偏蓝，与整体配色不一致。
+         深色纸张上的对比度由 index.html 的 html.dark 覆盖负责。 */
+      color: #737373;
       margin-top: -0.5em;
       margin-bottom: 1.5em;
     }
@@ -52,7 +56,7 @@ export function buildScopedCSS(
       height: auto;
     }
     .editor-paper img.ProseMirror-selectednode {
-      outline: 3px solid rgba(59, 130, 246, 0.8);
+      outline: 3px solid rgba(249, 115, 22, 0.8);
       outline-offset: 2px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }

@@ -448,6 +448,8 @@ console.log('\n6. 深色模式下编辑器纸张与正文对比度');
         del: colorOf('s'),
         link: colorOf('a'),
         blockquote: colorOf('blockquote'),
+        // 光标色属于编辑器专用样式（utils/cssScoper.ts），随下面那条不偏蓝的断言一起测
+        caret: getComputedStyle(paper.querySelector('.ProseMirror')).caretColor,
       };
     });
   };
@@ -496,6 +498,15 @@ console.log('\n6. 深色模式下编辑器纸张与正文对比度');
         `  ${sel} 颜色=${color} 亮度=${color ? luminance(color).toFixed(0) : 'n/a'}（要求 >150）`,
       );
     }
+    // 光标色不得偏蓝：此前的 #3b82f6 是遗留蓝，与本应用「只保留灰阶、橙色、红色」冲突
+    const caretMatch = (paper.caret || '').match(/\d+/g) || [];
+    const caretRGB = caretMatch.slice(0, 3).map(Number);
+    const caretBlue = caretRGB.length === 3 && caretRGB[2] - caretRGB[0] > 6;
+    record(
+      '深色下编辑器光标不偏蓝（回到灰/橙/红调色板）',
+      !!paper.caret && !caretBlue,
+      `  caret-color=${paper.caret}`,
+    );
   } catch (e) {
     record('深色下纸张可读性可测量', false, `  ${e.message.split('\n')[0]}`);
   }
@@ -520,7 +531,9 @@ console.log('\n6. 深色模式下编辑器纸张与正文对比度');
 // ─── 7. 应用界面装饰色约束：只允许灰阶、橙色、红色 ───
 console.log('\n7. 应用界面装饰色只保留灰阶、橙色和红色');
 {
-  const sourceRoots = ['components', 'App.tsx', 'hooks'];
+  // utils 也纳入扫描：编辑器专用样式（utils/cssScoper.ts 里的光标色、图片选中框）
+  // 属于应用界面装饰，此前不在范围内，蓝色正是从这条缝里漏过去的。
+  const sourceRoots = ['components', 'App.tsx', 'hooks', 'utils'];
   const forbidden = /(?:blue|indigo|violet|purple|sky|cyan|teal|fuchsia|pink|green|emerald|yellow|amber)/;
   const { readdirSync, statSync, readFileSync } = await import('node:fs');
   const { join, extname } = await import('node:path');
@@ -581,7 +594,9 @@ console.log('\n8. 深色配色为中性灰（不带蓝）');
   );
 
   // (b) 组件层：slate 本身就是蓝灰，必须换成中性灰
-  const sourceRoots = ['components', 'App.tsx', 'hooks'];
+  // utils 也纳入扫描：编辑器专用样式（utils/cssScoper.ts 里的光标色、图片选中框）
+  // 属于应用界面装饰，此前不在范围内，蓝色正是从这条缝里漏过去的。
+  const sourceRoots = ['components', 'App.tsx', 'hooks', 'utils'];
   const { readdirSync, statSync } = await import('node:fs');
   const { join, extname } = await import('node:path');
   const files = [];
