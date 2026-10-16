@@ -1,8 +1,8 @@
 @echo off
 chcp 65001 > nul
-title EPUB Maker
+title EPUB Simple Editor
 
-echo 正在启动 EPUB Maker...
+echo 正在启动 EPUB Simple Editor...
 echo.
 
 :: 检查 node_modules 是否存在，不存在则先安装依赖

@@ -1,7 +1,14 @@
 {
-  "name": "epub-maker",
+  "name": "epub-simple-editor",
   "private": true,
   "version": "0.0.0",
+  "description": "在线 EPUB 电子书制作工具（基于 kukurii/epub-maker 修改）",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LIPiston/epub-simple-editor.git"
+  },
+  "homepage": "https://lipiston.github.io/epub-simple-editor/",
   "type": "module",
   "scripts": {
     "dev": "vite",
