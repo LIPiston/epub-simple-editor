@@ -392,11 +392,13 @@ console.log('\n6. 深色模式下编辑器纸张与正文对比度');
       const now = Date.now();
       await lf.setItem('epub_simple_editor_book_' + id, {
         metadata: { title: '纸张测试书', creator: '作者', language: 'zh', description: '', publisher: '', date: '2026-01-01' },
-        chapters: [{ id: id + '_c1', title: '第一章', level: 1, subItems: [], content: '<h1>第一章</h1><h2>第一节</h2><p>正文内容，用来测量纸张与文字的对比度。</p>' }],
+        chapters: [{ id: id + '_c1', title: '第一章', level: 1, subItems: [], content: '<h1>第一章</h1><h2>第一节</h2><p>正文内容，用来测量纸张与文字的对比度。</p><p>行内元素：<strong>加粗文字</strong>、<em>斜体文字</em>、<s>删除线</s>、<a href="https://example.com">链接文字</a>、<code>行内代码</code>。</p><blockquote><p>引用块里的文字。</p></blockquote>' }],
         images: [], extraFiles: [], cover: null, coverId: null, coverCustomCSS: '',
         // 用 minimal：它给 h1 写死了纯黑（#000），而 h2 不写 color、继承纸张文字色。
         // 深色下若不把标题颜色拉回来，就会出现「一级标题黑、二级标题白」的割裂，
         // 正是这条断言要钉住的回归。
+        // 它同时给 strong 写死 #000、给 em / blockquote 写死 #555、给 a 写死 #333，
+        // 行内元素在深色纸张上的可读性一并由这里的断言覆盖。
         activeStyleId: 'minimal', isPresetStyleActive: true, customCSS: '',
       });
       await lf.setItem('epub_simple_editor_library_index_v1', {
@@ -434,7 +436,19 @@ console.log('\n6. 深色模式下编辑器纸张与正文对比度');
         const node = paper.querySelector(sel);
         return node ? getComputedStyle(node).color : null;
       };
-      return { bg, color: getComputedStyle(paper).color, h1: colorOf('h1'), h2: colorOf('h2') };
+      return {
+        bg,
+        color: getComputedStyle(paper).color,
+        h1: colorOf('h1'),
+        h2: colorOf('h2'),
+        // 行内元素：各主题给它们写死了深色，深色纸张上若不覆盖就会发闷/读不清。
+        // 加粗（strong）是用户报告的那一处，其余是同源问题。
+        strong: colorOf('strong'),
+        em: colorOf('em'),
+        del: colorOf('s'),
+        link: colorOf('a'),
+        blockquote: colorOf('blockquote'),
+      };
     });
   };
 
@@ -465,6 +479,23 @@ console.log('\n6. 深色模式下编辑器纸张与正文对比度');
       paper.h1 === paper.h2,
       `  一级=${paper.h1} 二级=${paper.h2}`,
     );
+    // 行内元素：各主题给它们写死了深色（minimal 的加粗是纯黑、斜体 #555、
+    // 链接 #333、引用块 #555）。这些颜色写在元素自身上，不会被纸张继承覆盖，
+    // 必须在编辑区这一层用 html.dark 显式盖过。加粗是用户报告的那一处。
+    const inlineChecks = [
+      ['加粗 strong', 'strong', paper.strong],
+      ['斜体 em', 'em', paper.em],
+      ['删除线 s', 's', paper.del],
+      ['链接 a', 'a', paper.link],
+      ['引用块 blockquote', 'blockquote', paper.blockquote],
+    ];
+    for (const [label, sel, color] of inlineChecks) {
+      record(
+        `深色下${label}颜色够亮（不再照主题写死的深色）`,
+        !!color && luminance(color) > 150,
+        `  ${sel} 颜色=${color} 亮度=${color ? luminance(color).toFixed(0) : 'n/a'}（要求 >150）`,
+      );
+    }
   } catch (e) {
     record('深色下纸张可读性可测量', false, `  ${e.message.split('\n')[0]}`);
   }

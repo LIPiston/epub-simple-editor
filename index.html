@@ -181,6 +181,45 @@
       }
 
       /*
+        深色下行内文字同样跟随纸张文字色。
+        标题之外，各主题还给行内元素写死了深色：加粗在 classic / minimal 里是纯黑
+        (#000)，其余主题是深蓝 / 深棕 / 深紫；斜体、删除线同理。这些颜色落在深色
+        纸张上会发闷甚至读不清——加粗正文「看着像没变色」正是这个问题。
+        图注 .caption、目录链接 .toc-link 也各写死了一个中灰 / 深色，一并拉回来。
+        注意：行内元素上写在元素自身的 color 不会被继承覆盖，必须像标题一样显式
+        用 html.dark 提高特异性盖过书稿主题的 `.editor-paper strong` 规则。
+        局限：内容若自带行内样式（如 <strong style="color:#000">），其优先级高于
+        任何选择器，这里覆盖不到——与上面标题的处理是同一限制。
+      */
+      html.dark .editor-paper strong,
+      html.dark .editor-paper b,
+      html.dark .editor-paper em,
+      html.dark .editor-paper i,
+      html.dark .editor-paper s,
+      html.dark .editor-paper strike,
+      html.dark .editor-paper del,
+      html.dark .editor-paper code,
+      html.dark .editor-paper .caption,
+      html.dark .editor-paper .toc-link,
+      html.dark .editor-paper .toc-level-2 {
+        color: #e5e5e5;
+      }
+      /* 链接保留彩色强调的做法需要逐主题配浅色版，代价高；统一跟随纸张文字色，
+         靠下划线来区分链接身份（浅色主题下也是这样识别的）。 */
+      html.dark .editor-paper a {
+        color: #e5e5e5;
+        border-bottom-color: rgba(255, 255, 255, 0.35);
+      }
+      html.dark .editor-paper a:hover {
+        color: #ffffff;
+        border-bottom-color: rgba(255, 255, 255, 0.6);
+      }
+      /* minimal 给下划线写了 #999，深底上几乎看不见，改成半透明白 */
+      html.dark .editor-paper u {
+        text-decoration-color: rgba(255, 255, 255, 0.4);
+      }
+
+      /*
         深色下，书稿里「浅底抠色」的元素都要改成深色纸张色。
         各主题的分割线装饰用 `background:#fff`（或自身浅纸色）在线上挖出断口，
         块引用 / 目录链接也带浅底（如 classic 的 blockquote #fafafa、fresh 的 .toc-link #fff）。
@@ -198,11 +237,38 @@
       html.dark .editor-paper .divider-5:after {
         background: #171717;
         background-color: #171717;
+        /* 装饰字形各写死了一档深灰（#555~#888），深底上几乎看不见，统一提亮 */
+        color: #a3a3a3;
       }
       html.dark .editor-paper blockquote,
       html.dark .editor-paper .toc-link,
       html.dark .editor-paper .toc-level-2 .toc-link {
         background-color: rgba(255, 255, 255, 0.06);
+      }
+      /*
+        块引用的文字色此前漏改：上面只换了它的底色，各主题写死的深色文字
+        （classic、fresh、dreamy、pudding 都各配了一档深色）
+        在深色胶囊底上依然读不清。
+      */
+      html.dark .editor-paper blockquote {
+        color: #e5e5e5;
+      }
+      /*
+        pudding 的 code 是「白底 + 主题色文字」的胶囊（background:#fff），
+        深色纸张上会露成刺眼白块——与上面分割线装饰同理。
+        底色换成半透明白，主题色文字保持可读。
+      */
+      html.dark .editor-paper code {
+        background-color: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.16);
+      }
+      /*
+        图注说明文字。utils/cssScoper.ts 注入的 .editor-paper p.caption 写死了一个
+        中灰值（特异度 0,2,1，高于各主题自己的 .editor-paper .caption），
+        深底上对比偏低，这里压到一档更亮的灰。
+      */
+      html.dark .editor-paper p.caption {
+        color: #a3a3a3;
       }
       /* 图片的「相框」底色/描边同样改成半透明白，保留装帧感又不刺眼 */
       html.dark .editor-paper img {
