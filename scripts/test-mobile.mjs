@@ -6,13 +6,16 @@
  *
  * Obsidian 手机端的行为，也就是这里要验证的：
  *   1. 顶栏左侧的按钮拉出「左抽屉」（在这是两级导航），顶栏右侧的按钮拉出
- *      「右抽屉」（在这是当前章节的大纲）；
+ *      「右抽屉」（在这是当前章节的大纲 + 全书目录）；
  *   2. 两个抽屉互斥，同时只能有一个；
  *   3. 从屏幕左边缘右滑 → 开左抽屉；从右边缘左滑 → 开右抽屉；
  *      抽屉打开时，朝关闭方向滑 → 收起；
  *   4. 点大纲里的条目前往对应小节，并自动收起抽屉（否则挡住刚定位的正文）；
  *   5. 大纲只在该有的地方出现：不在编辑章节时，顶栏没有大纲入口；
- *   6. 触摸设备没有悬停，目录行的操作按钮必须常显，否则永远点不到。
+ *   6. 触摸设备没有悬停，目录行的操作按钮必须常显，否则永远点不到；
+ *   7. 右抽屉从中间切成上下两块：上「大纲」（章内定位）、下「目录」
+ *      （全书章节快捷切换），各占一半、各自滚动，点目录一行即换章并收起抽屉；
+ *      章节多时打开抽屉会把当前章滚进视野。
  *
  * 依赖：esbuild 与 playwright-core（devDependencies），以及本机 Chromium。
  *       找不到浏览器时跳过（exit 0）而不是误报失败。
@@ -86,6 +89,15 @@ const TAILWIND_SUBSET = `
   .translate-x-full { transform: translateX(100%); }
   .w-11 { width: 2.75rem; } .w-52 { width: 13rem; } .w-72 { width: 18rem; }
   .h-12 { height: 3rem; } .h-10 { height: 2.5rem; }
+  /* 右抽屉两个分区用到的：序号窄列 + 计数靠右 */
+  .w-5 { width: 1.25rem; } .w-7 { width: 1.75rem; } .h-7 { height: 1.75rem; }
+  .text-right { text-align: right; } .ml-auto { margin-left: auto; }
+  .gap-1\\.5 { gap: 0.375rem; } .gap-2 { gap: 0.5rem; }
+  .py-1\\.5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+  .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+  /* 自动保存胶囊是 absolute 定位的；缺了这两条它就退回文档流、盖到顶栏按钮上，
+     让「点导航入口」之类的操作被它挡下。真实页面由 CDN 生成这些类。 */
+  .right-4 { right: 1rem; } .bottom-4 { bottom: 1rem; } .bottom-14 { bottom: 3.5rem; }
   .ProseMirror { outline: none; min-height: 400px; }
   /* md 断点（768px）：与项目里的断点一致 */
   @media (min-width: 768px) {
@@ -173,8 +185,10 @@ const bootApp = async (page) => {
 };
 
 /**
- * 种子：一本书，正文够长，中段埋一个带 id 的小标题 —— 这样「跳到大纲条目」
- * 会让滚动条真的移动，而不是原地不动也能假装成功。
+ * 种子：一本书，共三章。
+ *   第一章：正文够长，中段埋一个带 id 的小标题 —— 这样「跳到大纲条目」
+ *   会让滚动条真的移动，而不是原地不动也能假装成功；
+ *   其余两章各有一行正文，用来验证右抽屉下半的目录能换章。
  */
 const seedBook = (page) =>
   page.evaluate(async () => {
@@ -191,17 +205,62 @@ const seedBook = (page) =>
     const now = Date.now();
     await lf.setItem('epub_simple_editor_book_' + id, {
       metadata: { title: '移动端样书', creator: '作者', language: 'zh', description: '', publisher: '', date: '2026-01-01' },
-      chapters: [{ id: id + '_ch0', title: '第一章', content, level: 1, subItems: [] }],
+      chapters: [
+        { id: id + '_ch0', title: '第一章', content, level: 1, subItems: [] },
+        { id: id + '_ch1', title: '第二章', content: '<h1 id="ch2-top">第二章</h1><p>第二章的正文。</p>', level: 1, subItems: [] },
+        { id: id + '_ch2', title: '第三章', content: '<h1 id="ch3-top">第三章</h1><p>第三章的正文。</p>', level: 1, subItems: [] },
+      ],
       images: [], extraFiles: [], cover: null, coverId: null, coverCustomCSS: '',
       activeStyleId: 'classic', isPresetStyleActive: true, customCSS: '',
     });
     index.books = [
-      { id, title: '移动端样书', author: '作者', chapterCount: 1, imageCount: 0, sizeBytes: 2048, createdAt: now, updatedAt: now },
+      { id, title: '移动端样书', author: '作者', chapterCount: 3, imageCount: 0, sizeBytes: 2048, createdAt: now, updatedAt: now },
       ...index.books,
     ];
     if (!index.activeBookId) index.activeBookId = id;
     await lf.setItem('epub_simple_editor_library_index_v1', index);
   });
+
+/**
+ * 种子（长书）：30 章，用来验证下半的目录「打开时把当前章滚进视野」——
+ * 章节行数远超抽屉下半的可视高度，当前章若在末尾，不滚就看不到。
+ * activeChapterIndex 指定进入编辑器时停在第几章。
+ */
+const seedLongBook = (page, activeChapterIndex) =>
+  page.evaluate(async (activeIndex) => {
+    const lf = window.__localforage;
+    const id = 'seed_long';
+    const chapters = Array.from({ length: 30 }, (_, i) => ({
+      id: `${id}_ch${i}`,
+      title: `第 ${i + 1} 章`,
+      content: `<h1 id="${id}_anchor${i}">第 ${i + 1} 章</h1><p>第 ${i + 1} 章的正文。</p>`,
+      level: 1,
+      subItems: [],
+    }));
+
+    const index = (await lf.getItem('epub_simple_editor_library_index_v1')) || { books: [], activeBookId: null };
+    const now = Date.now();
+    await lf.setItem('epub_simple_editor_book_' + id, {
+      metadata: { title: '长书', creator: '作者', language: 'zh', description: '', publisher: '', date: '2026-01-01' },
+      chapters,
+      images: [], extraFiles: [], cover: null, coverId: null, coverCustomCSS: '',
+      activeStyleId: 'classic', isPresetStyleActive: true, customCSS: '',
+    });
+    index.books = [
+      { id, title: '长书', author: '作者', chapterCount: chapters.length, imageCount: 0, sizeBytes: 2048, createdAt: now, updatedAt: now },
+      ...index.books,
+    ];
+    index.activeBookId = id;
+    await lf.setItem('epub_simple_editor_library_index_v1', index);
+
+    // 指定当前章：useProject 装载时会读「最近查看的章节」，但这条路径
+    // 受「记忆阅读位置」开关控制，因此开关也要一并打开。
+    localStorage.setItem('epub-simple-editor-reading-position-enabled', 'true');
+    localStorage.setItem('epub-simple-editor-reading-position', JSON.stringify({
+      version: 2,
+      books: { [id]: { lastChapterId: chapters[activeIndex].id, positions: {} } },
+    }));
+  }, activeChapterIndex);
 
 /** 从书库「打开」当前书，进入编辑章节 */
 const openChapter = async (page) => {
@@ -232,6 +291,45 @@ const drawerState = (page) =>
       })),
       hasOutlineToggle: !!document.querySelector('[data-outline-toggle="true"]'),
       rightText: right ? (right.textContent || '').slice(0, 80) : '',
+      chapterRows: Array.from(document.querySelectorAll('[data-drawer-chapter]')).map((b) => ({
+        id: b.getAttribute('data-drawer-chapter'),
+        active: b.getAttribute('data-active') === 'true',
+        text: (b.textContent || '').trim(),
+      })),
+    };
+  });
+
+/**
+ * 右抽屉两个分区的几何关系：上「大纲」、下「目录」，各自占一半高度。
+ * 返回的是像素信息，用来验证「从中间分割」这件事真的发生了，
+ * 而不是只检查两个 div 都存在（都存在但叠在一起也能骗过存在性断言）。
+ */
+const drawerPanes = (page) =>
+  page.evaluate(() => {
+    const drawer = document.querySelector('[data-drawer="right"]');
+    const outline = document.querySelector('[data-outline-pane="true"]');
+    const toc = document.querySelector('[data-chapter-pane="true"]');
+    if (!drawer || !outline || !toc) {
+      return { hasDrawer: !!drawer, hasOutline: !!outline, hasToc: !!toc };
+    }
+    const d = drawer.getBoundingClientRect();
+    const o = outline.getBoundingClientRect();
+    const t = toc.getBoundingClientRect();
+    return {
+      hasDrawer: true,
+      hasOutline: true,
+      hasToc: true,
+      // 上下相邻：大纲的底边就是目录的顶边（容 1px 的亚像素误差）
+      stacked: Math.abs(o.bottom - t.top) <= 1 && o.top < t.top,
+      outlineTop: Math.round(o.top - d.top),
+      outlineBottom: Math.round(o.bottom - d.top),
+      tocTop: Math.round(t.top - d.top),
+      tocBottom: Math.round(t.bottom - d.top),
+      drawerHeight: Math.round(d.height),
+      outlineHeight: Math.round(o.height),
+      tocHeight: Math.round(t.height),
+      // 各占一半：两边高度差不超过抽屉高度的 10%
+      balanced: d.height > 0 && Math.abs(o.height - t.height) / d.height < 0.1,
     };
   });
 
@@ -322,8 +420,142 @@ console.log('\n2. 大纲抽屉内容来自当前章节');
   await ctx.close();
 }
 
-// ─── 3. 点大纲条目：跳转过去，并收起抽屉 ───
-console.log('\n3. 点大纲条目跳转到对应小节，并自动收起抽屉');
+// ─── 3. 右抽屉从中间一分为二：上大纲 / 下目录 ───
+console.log('\n3. 右抽屉从中间分割：上半大纲、下半目录');
+{
+  const { ctx, page } = await newPage();
+  await seedBook(page);
+  await bootApp(page);
+  await openChapter(page);
+
+  await page.click('[data-outline-toggle="true"]');
+  await page.waitForTimeout(400);
+
+  const panes = await drawerPanes(page);
+  record(
+    '右抽屉里同时存在「大纲」和「目录」两个分区',
+    panes.hasDrawer && panes.hasOutline && panes.hasToc,
+    `  抽屉=${panes.hasDrawer}；大纲分区=${panes.hasOutline}；目录分区=${panes.hasToc}`,
+  );
+  record(
+    '大纲在上、目录在下，两块上下相接（不重叠、不留空档）',
+    panes.stacked === true,
+    `  大纲 ${panes.outlineTop}~${panes.outlineBottom}px；目录 ${panes.tocTop}~${panes.tocBottom}px` +
+    `；相接=${panes.stacked}`,
+  );
+  record(
+    '两块各占抽屉一半高度（从中间分割）',
+    panes.balanced === true,
+    `  抽屉高=${panes.drawerHeight}px；大纲高=${panes.outlineHeight}px；目录高=${panes.tocHeight}px`,
+  );
+
+  const state = await drawerState(page);
+  record(
+    '下半的目录列出全书章节，且标出当前章',
+    state.chapterRows.length === 3 &&
+      state.chapterRows.filter((r) => r.active).length === 1 &&
+      state.chapterRows.find((r) => r.active)?.text.includes('第一章'),
+    `  章节行=${JSON.stringify(state.chapterRows)}`,
+  );
+  await ctx.close();
+}
+
+// ─── 4. 点下半的目录换章：切过去并收起抽屉 ───
+console.log('\n4. 点右抽屉下半的目录可快捷切换章节');
+{
+  const { ctx, page } = await newPage();
+  await seedBook(page);
+  await bootApp(page);
+  await openChapter(page);
+
+  // 确认起点确实是第一章（否则「切过去了」这条断言没有意义）
+  const before = await page.evaluate(() => (document.querySelector('.ProseMirror')?.textContent || '').slice(0, 30));
+
+  await page.click('[data-outline-toggle="true"]');
+  await page.waitForTimeout(400);
+  await page.click('[data-drawer-chapter="seed_mobile_ch2"]');
+  await page.waitForTimeout(600);
+
+  const after = await page.evaluate(() => ({
+    text: (document.querySelector('.ProseMirror')?.textContent || '').slice(0, 30),
+    // 编辑器工具栏里的标题栏 / 正文首行会体现当前章
+    activeRow: Array.from(document.querySelectorAll('[data-drawer-chapter]'))
+      .filter((b) => b.getAttribute('data-active') === 'true')
+      .map((b) => b.getAttribute('data-drawer-chapter')),
+  }));
+  const state = await drawerState(page);
+
+  record(
+    '点目录里的「第三章」后，编辑器换到该章正文',
+    after.text.includes('第三章') && !after.text.includes('第一章'),
+    `  切换前正文开头=${JSON.stringify(before)}；切换后=${JSON.stringify(after.text)}`,
+  );
+  record(
+    '切换后目录里的高亮跟着移到新章节',
+    after.activeRow.length === 1 && after.activeRow[0] === 'seed_mobile_ch2',
+    `  高亮行=${JSON.stringify(after.activeRow)}`,
+  );
+  record(
+    '换章后抽屉自动收起（不挡住刚切到的正文）',
+    !state.rightOpen,
+    `  右抽屉开=${state.rightOpen}`,
+  );
+  await ctx.close();
+}
+
+// ─── 5. 长书：打开抽屉时当前章自动滚进视野 ───
+console.log('\n5. 章节很多时，打开抽屉就把当前章滚进视野');
+{
+  const { ctx, page } = await newPage();
+  // 停在最后一章：它在列表里排第 30 行，不滚就落在下半可视区之外
+  await seedLongBook(page, 29);
+  await bootApp(page);
+  await openChapter(page);
+  await page.waitForTimeout(400);
+
+  const current = await page.evaluate(() => {
+    const rows = Array.from(document.querySelectorAll('[data-drawer-chapter]'));
+    const active = rows.find((b) => b.getAttribute('data-active') === 'true');
+    return { total: rows.length, activeId: active ? active.getAttribute('data-drawer-chapter') : null };
+  });
+  record(
+    '长书里当前章确实是最后一章（后面那条断言才有意义）',
+    current.total === 30 && current.activeId === 'seed_long_ch29',
+    `  章节行数=${current.total}；当前章=${current.activeId}`,
+  );
+
+  await page.click('[data-outline-toggle="true"]');
+  await page.waitForTimeout(500);
+
+  const visibility = await page.evaluate(() => {
+    const list = document.querySelector('[data-drawer-chapter-list="true"]');
+    const active = Array.from(document.querySelectorAll('[data-drawer-chapter]'))
+      .find((b) => b.getAttribute('data-active') === 'true');
+    if (!list || !active) return { found: false };
+
+    const l = list.getBoundingClientRect();
+    const a = active.getBoundingClientRect();
+    return {
+      found: true,
+      // 当前章行的中线落在列表可视区内 → 真的滚到了它那里
+      inView: a.top >= l.top - 1 && a.bottom <= l.bottom + 1,
+      listTop: Math.round(l.top), listBottom: Math.round(l.bottom),
+      rowTop: Math.round(a.top), rowBottom: Math.round(a.bottom),
+      scrollTop: list.scrollTop,
+    };
+  });
+
+  record(
+    '打开抽屉后，当前章那一行落在下半列表的可视区内',
+    visibility.found && visibility.inView,
+    `  列表可视区 ${visibility.listTop}~${visibility.listBottom}px；当前章行 ${visibility.rowTop}~${visibility.rowBottom}px` +
+    `；列表 scrollTop=${visibility.scrollTop}`,
+  );
+  await ctx.close();
+}
+
+// ─── 6. 点大纲条目：跳转过去，并收起抽屉 ───
+console.log('\n6. 点大纲条目跳转到对应小节，并自动收起抽屉');
 {
   const { ctx, page } = await newPage();
   await seedBook(page);
@@ -369,8 +601,8 @@ console.log('\n3. 点大纲条目跳转到对应小节，并自动收起抽屉')
   await ctx.close();
 }
 
-// ─── 4. 两个抽屉互斥 ───
-console.log('\n4. 左右抽屉互斥');
+// ─── 7. 两个抽屉互斥 ───
+console.log('\n7. 左右抽屉互斥');
 {
   const { ctx, page } = await newPage();
   await seedBook(page);
@@ -411,8 +643,8 @@ console.log('\n4. 左右抽屉互斥');
   await ctx.close();
 }
 
-// ─── 5. 边缘滑动手势 ───
-console.log('\n5. 屏幕边缘滑动开关抽屉');
+// ─── 8. 边缘滑动手势 ───
+console.log('\n8. 屏幕边缘滑动开关抽屉');
 {
   const { ctx, page } = await newPage();
   await seedBook(page);
@@ -475,8 +707,8 @@ console.log('\n5. 屏幕边缘滑动开关抽屉');
   await ctx.close();
 }
 
-// ─── 6. 触摸设备：悬停才出现的操作必须常显 ───
-console.log('\n6. 触摸设备上「悬停才出现」的操作改为常显');
+// ─── 9. 触摸设备：悬停才出现的操作必须常显 ───
+console.log('\n9. 触摸设备上「悬停才出现」的操作改为常显');
 {
   const realIndex = readFileSync(path.resolve('index.html'), 'utf8');
   record(
@@ -525,8 +757,8 @@ console.log('\n6. 触摸设备上「悬停才出现」的操作改为常显');
   await ctx.close();
 }
 
-// ─── 7. 左侧抽屉打开时不能被内容区（编辑器工具栏）压住 ───
-console.log('\n7. 抽屉层级：开着时不被编辑器工具栏遮挡');
+// ─── 10. 左侧抽屉打开时不能被内容区（编辑器工具栏）压住 ───
+console.log('\n10. 抽屉层级：开着时不被编辑器工具栏遮挡');
 {
   const { ctx, page } = await newPage();
   await seedBook(page);
