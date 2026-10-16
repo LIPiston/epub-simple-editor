@@ -215,7 +215,11 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
 
   return (
     <>
-      <div className="relative z-50 flex-none min-h-12 md:min-h-14 bg-white border-b border-gray-200 px-2 md:px-3 flex items-center justify-between shadow-sm dark:bg-gray-900 dark:border-gray-800">
+      {/*
+        z-30：必须低于移动端抽屉遮罩（z-40），否则抽屉滑出时工具栏会压在抽屉上。
+        工具栏自己那两个下拉菜单走 Portal 挂到 body（z-[120]），不依赖这里的层级。
+      */}
+      <div data-editor-toolbar="true" className="relative z-30 flex-none min-h-12 md:min-h-14 bg-white border-b border-gray-200 px-2 md:px-3 flex items-center justify-between shadow-sm dark:bg-gray-900 dark:border-gray-800">
         <div className="flex items-center flex-1 overflow-x-auto gap-0.5 scrollbar-none min-w-0">
           {/* 移动端返回按钮 */}
           {onMobileBack && (
