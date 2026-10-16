@@ -525,6 +525,69 @@ console.log('\n6. 触摸设备上「悬停才出现」的操作改为常显');
   await ctx.close();
 }
 
+// ─── 7. 左侧抽屉打开时不能被内容区（编辑器工具栏）压住 ───
+console.log('\n7. 抽屉层级：开着时不被编辑器工具栏遮挡');
+{
+  const { ctx, page } = await newPage();
+  await seedBook(page);
+  await bootApp(page);
+  await openChapter(page);
+
+  // 先确认工具栏确实存在（否则这条断言没有意义）
+  const hasToolbar = await page.evaluate(() => !!document.querySelector('[data-editor-toolbar="true"]'));
+  record('编辑器工具栏带 data-editor-toolbar 钩子', hasToolbar, `  找到=${hasToolbar}`);
+
+  // 打开左侧导航抽屉
+  await page.click('button[title="打开导航"]');
+  await page.waitForTimeout(400);
+
+  const hit = await page.evaluate(() => {
+    const drawer = document.querySelector('[data-drawer="left"]');
+    const toolbar = document.querySelector('[data-editor-toolbar="true"]');
+    if (!drawer || !toolbar) return { drawer: !!drawer, toolbar: !!toolbar };
+
+    const dRect = drawer.getBoundingClientRect();
+    const tRect = toolbar.getBoundingClientRect();
+    // 取抽屉与工具栏的几何交集中心，问浏览器「这个点最上层是谁」
+    const cx = (Math.max(dRect.left, tRect.left) + Math.min(dRect.right, tRect.right)) / 2;
+    const cy = (Math.max(dRect.top, tRect.top) + Math.min(dRect.bottom, tRect.bottom)) / 2;
+    const top = document.elementFromPoint(cx, cy);
+
+    const dZ = getComputedStyle(drawer).zIndex;
+    const tZ = getComputedStyle(toolbar).zIndex;
+    const overlaps = dRect.left < tRect.right && tRect.left < dRect.right
+      && dRect.top < tRect.bottom && tRect.top < dRect.bottom;
+
+    return {
+      drawer: true,
+      toolbar: true,
+      overlaps,
+      cx: Math.round(cx),
+      cy: Math.round(cy),
+      topInDrawer: !!top && (drawer === top || drawer.contains(top)),
+      topInToolbar: !!top && (toolbar === top || toolbar.contains(top)),
+      topTag: top ? top.tagName : null,
+      drawerZ: dZ,
+      toolbarZ: tZ,
+      drawerRight: Math.round(dRect.right),
+      toolbarLeft: Math.round(tRect.left),
+    };
+  });
+
+  record(
+    '抽屉与工具栏在几何上确有重叠（否则这条用例测不到东西）',
+    hit.overlaps === true,
+    `  重叠=${hit.overlaps}；抽屉右边界=${hit.drawerRight}；工具栏左边界=${hit.toolbarLeft}`,
+  );
+  record(
+    '重叠处最上层属于抽屉，而不是编辑器工具栏',
+    hit.topInDrawer === true && hit.topInToolbar === false,
+    `  (${hit.cx},${hit.cy}) 命中=${hit.topTag}；在抽屉内=${hit.topInDrawer}；在工具栏内=${hit.topInToolbar}` +
+    `；抽屉 z=${hit.drawerZ}；工具栏 z=${hit.toolbarZ}`,
+  );
+  await ctx.close();
+}
+
 await browser.close();
 rmSync(tmp, { recursive: true, force: true });
 

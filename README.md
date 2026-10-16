@@ -101,7 +101,7 @@
 npm run test:library    # 书库：多书隔离、复制/重命名/删除、旧数据迁移
 npm run test:nav        # 两级可收回导航（活动栏 + 侧边面板）
 npm run test:theme      # 主题开关位置、跟随系统/记住用户选择、悬浮提示层
-npm run test:mobile     # 手机端：左右抽屉、边缘滑动手势、触摸端操作常显
+npm run test:mobile     # 手机端：左右抽屉、边缘滑动手势、触摸端操作常显、抽屉不被工具栏遮挡
 npm run test:toolbar    # 窄屏工具栏：「更多工具」可达、6 种分割线样式可选可插入
 npm run test:toc-toggle # 目录行的「是否加入目录」开关
 npm run test:pill       # 自动保存胶囊不遮挡编辑器底栏
