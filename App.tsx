@@ -259,6 +259,16 @@ const App: React.FC = () => {
     setEditorFocusRequest(null);
   };
 
+  /**
+   * 右抽屉下半的目录里点了某章。
+   * 连同收起抽屉一起做：点目录就是为了看那一章的正文，抽屉留着会挡住它
+   * （与大纲条目跳转后的处理一致）。选中的若就是当前章，也照样收起。
+   */
+  const handleSelectChapterFromDrawer = (id: string) => {
+    handleSelectChapter(id);
+    closeMobileOutline();
+  };
+
   const handleScrollToAnchor = (chapterId: string, anchorId: string) => {
     setCurrentView('chapters');
     if (activeChapterId !== chapterId) {
@@ -339,12 +349,14 @@ const App: React.FC = () => {
         onToggleTheme={toggleTheme}
       />
 
-      {/* 移动端右抽屉：当前章节的大纲（与左侧导航互斥）*/}
+      {/* 移动端右抽屉：上半当前章节的大纲、下半全书目录（与左侧导航互斥）*/}
       <OutlineDrawer
         open={outlineOpen}
         onClose={closeMobileOutline}
         chapter={activeChapter}
+        chapters={project.chapters}
         onJump={handleScrollToAnchor}
+        onSelectChapter={handleSelectChapterFromDrawer}
       />
 
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
