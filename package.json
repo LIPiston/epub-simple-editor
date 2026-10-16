@@ -24,7 +24,9 @@
     "test:theme": "node scripts/test-theme.mjs",
     "test:toc-toggle": "node scripts/test-chapter-toc-toggle.mjs",
     "test:mobile": "node scripts/test-mobile.mjs",
-    "test:toolbar": "node scripts/test-toolbar.mjs"
+    "test:toolbar": "node scripts/test-toolbar.mjs",
+    "test:sync": "node scripts/test-sync.mjs",
+    "test:sync-crypto": "node scripts/test-sync-crypto.mjs"
   },
   "dependencies": {
     "@tiptap/extension-heading": "^3.20.1",
