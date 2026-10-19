@@ -27,47 +27,32 @@
           //      否则系统深色模式下原生提示会变成看不清的黑框；
           //   2. 让浏览器知道本页自己处理了深色，不再强制反色（force-dark）。
           root.style.colorScheme = isDark ? 'dark' : 'light';
+          // 3. 地址栏 / 安装后窗口标题栏的颜色也跟着走（与 useTheme 里的
+          //    syncThemeColor 保持同一套取值）。
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', isDark ? '#0a0a0a' : '#f5f5f5');
         } catch (e) {}
       })();
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        // 主题由 <html class="dark"> 控制，而不是跟随系统媒体查询：
-        // 用户显式选择后必须能覆盖系统偏好。
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: {
-              /*
-                整个 gray 刻度替换成中性灰（R=G=B）。
-                Tailwind 自带的 gray 其实是「冷灰」——灰阶越高蓝越明显，
-                所以深色界面即使全是灰阶也仍然发蓝。这里按中性值重定义，
-                顺便保留项目已用的 750 / 850 / 950 三档。
-              */
-              gray: {
-                50: '#fafafa',
-                100: '#f5f5f5',
-                200: '#e5e5e5',
-                300: '#d4d4d4',
-                400: '#a3a3a3',
-                500: '#737373',
-                600: '#525252',
-                700: '#404040',
-                750: '#333333',
-                800: '#262626',
-                850: '#1c1c1c',
-                900: '#171717',
-                950: '#0a0a0a',
-              }
-            },
-            animation: {
-              'spin-slow': 'spin 3s linear infinite',
-            }
-          }
-        }
-      }
-    </script>
+    <!--
+      Tailwind 改为构建期编译（配置见 tailwind.config.cjs，入口 index.css）。
+      原先走 cdn.tailwindcss.com：样式要在浏览器里现算，首次打开多一次外部请求，
+      离线时整个界面会掉样式 —— 与 PWA 的离线可用目标冲突。
+    -->
+    <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+    <!--
+      浏览器地址栏 / 状态栏 / 安装后的窗口标题栏颜色。
+      只有一个标签、由下面的首屏脚本和 useTheme 同步改写：本应用允许用户
+      显式覆盖系统偏好，用 media 查询写死两档会在「系统浅色 + 用户选深色」时对不上。
+    -->
+    <meta name="theme-color" content="#f5f5f5" />
+    <meta name="application-name" content="EPUB Simple Editor" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="EPUB 编辑器" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="description" content="在线制作 EPUB 电子书：多书管理、富文本编辑、封面设计与 EPUB 3 导出，数据保存在本机，支持离线使用。" />
     <style>
       /* 未启用脚本时的兜底，同时确保首屏就声明了 color-scheme */
       html { color-scheme: light; }
@@ -285,21 +270,10 @@
         background-image: radial-gradient(#333333 1px, transparent 1px);
       }
     </style>
-    <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@18.3.1",
-        "react/": "https://esm.sh/react@18.3.1/",
-        "react-dom": "https://esm.sh/react-dom@18.3.1",
-        "react-dom/": "https://esm.sh/react-dom@18.3.1/",
-        "lucide-react": "https://esm.sh/lucide-react@0.344.0",
-        "jszip": "https://esm.sh/jszip@3.10.1",
-        "html-to-image": "https://esm.sh/html-to-image@1.11.13",
-        "file-saver": "https://esm.sh/file-saver@2.0.5",
-        "localforage": "https://esm.sh/localforage@1.10.0"
-      }
-    }
-    </script>
+    <!--
+      manifest 由 vite-plugin-pwa 在构建时注入（含 start_url / scope 与 base 对齐），
+      这里不再手写，避免两处路径各改一次。
+    -->
   </head>
   <body class="bg-[#F5F5F5] text-gray-900 dark:bg-gray-950 dark:text-gray-100 h-screen overflow-hidden">
     <div id="root" class="h-full"></div>

@@ -1,0 +1,9 @@
+/*
+  应用外壳样式入口。
+  这里只引入 Tailwind 的三层；全局视觉规则（主题、安全区、深色纸张覆盖等）
+  仍留在 index.html 的 <style> 里 —— 它们必须在首屏同步生效，
+  而且浏览器测试会直接从那一段抽取线上规则做断言。
+*/
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
