@@ -30,12 +30,24 @@ const readStoredTheme = (): Theme | null => {
   return stored === 'dark' || stored === 'light' ? stored : null;
 };
 
+/**
+ * 与 index.html 首屏脚本共用的主题色取值。
+ * 深色用 gray-950（页面深色底），浅色用 #f5f5f5（body 的浅色底）。
+ */
+const THEME_COLOR: Record<Theme, string> = {
+  light: '#f5f5f5',
+  dark: '#0a0a0a',
+};
+
 /** 把主题写到 <html> 上 */
 const applyTheme = (theme: Theme) => {
   if (typeof document === 'undefined') return;
   const root = document.documentElement;
   root.classList.toggle('dark', theme === 'dark');
   root.style.colorScheme = theme;
+  // 地址栏 / 安装后的窗口标题栏颜色。系统偏好由用户选择覆盖，
+  // 所以不能靠 <meta media="(prefers-color-scheme)"> 两档写死。
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[theme]);
 };
 
 export const useTheme = () => {

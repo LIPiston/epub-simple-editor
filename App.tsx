@@ -15,6 +15,7 @@ import { useIsMobile } from './hooks/useIsMobile';
 import { useDrawerGestures } from './hooks/useDrawerGestures';
 import GlobalDialogs from './components/ui/GlobalDialogs';
 import TooltipLayer from './components/ui/TooltipLayer';
+import { OfflineBanner, UpdatePrompt } from './components/ui/PwaBanners';
 import { DEFAULT_VIEW, getGroup, findGroupIdForView } from './components/layout/navConfig';
 
 interface EditorFocusRequest {
@@ -398,6 +399,9 @@ const App: React.FC = () => {
           )}
         </div>
 
+        {/* 离线标记：放在顶栏之下，避免压住刘海屏的安全区（顶栏自己带 pad-safe-top） */}
+        <OfflineBanner />
+
         <div className="flex-1 flex flex-col h-full overflow-hidden relative">
           <ViewContainer
             currentView={currentView}
@@ -468,6 +472,9 @@ const App: React.FC = () => {
 
       {/* 全局悬浮提示：替代系统绘制的 title 黑框，跟随主题 */}
       <TooltipLayer />
+
+      {/* 新版本已下载完：由用户决定何时刷新（自动刷新会丢掉未落盘的输入） */}
+      <UpdatePrompt />
     </div>
   );
 };

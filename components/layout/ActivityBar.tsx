@@ -6,8 +6,11 @@
  */
 
 import React from 'react';
-import { Download, Moon, RotateCcw, Sun } from 'lucide-react';
+import { Download, MonitorDown, Moon, RotateCcw, Sun } from 'lucide-react';
 import { NavGroup } from './navConfig';
+import { usePwa } from '../../hooks/usePwa';
+import { promptInstall } from '../../services/pwa';
+import { dialog } from '../../services/dialog';
 
 interface ActivityBarProps {
   groups: NavGroup[];
@@ -35,7 +38,29 @@ const ActivityBar: React.FC<ActivityBarProps> = ({
   isDark,
   onToggleTheme,
   className = '',
-}) => (
+}) => {
+  const { canInstall, isIosManualInstall, isStandalone } = usePwa();
+
+  // 安装入口只在真的能装的时候出现：
+  //   - Chromium 系：要等 beforeinstallprompt（浏览器确认满足可安装条件才会派发）；
+  //   - iOS：没有这个事件，只能给出「分享 → 添加到主屏幕」的说明；
+  //   - 已经在独立窗口里运行：不必再提示安装。
+  const showInstall = !isStandalone && (canInstall || isIosManualInstall);
+
+  const handleInstall = async () => {
+    if (canInstall) {
+      const outcome = await promptInstall();
+      if (outcome !== 'unavailable') return;
+    }
+    if (isIosManualInstall) {
+      await dialog.alert(
+        '在 Safari 中点击底部的「分享」按钮，选择「添加到主屏幕」，即可像应用一样离线使用。',
+        '安装到主屏幕',
+      );
+    }
+  };
+
+  return (
   <nav
     aria-label="一级导航"
     className={`w-11 flex-none flex-col items-center border-r border-gray-200 bg-gray-100 py-2 dark:border-gray-800 dark:bg-gray-900 ${className}`}
@@ -74,6 +99,20 @@ const ActivityBar: React.FC<ActivityBarProps> = ({
     })}
 
     <div className="mt-auto flex flex-col items-center gap-px pt-2">
+      {/* 安装到桌面：可安装时才出现（见上面的 showInstall 判定） */}
+      {showInstall && (
+        <button
+          type="button"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={handleInstall}
+          data-pwa-install="true"
+          title="安装到桌面，离线也能用"
+          aria-label="安装到桌面"
+          className="flex h-9 w-9 items-center justify-center rounded-md text-orange-600 transition-colors hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-gray-800"
+        >
+          <MonitorDown size={18} />
+        </button>
+      )}
       {/* 深色/浅色切换：单击即切，选择会被记住（首次进入跟随系统） */}
       <button
         type="button"
@@ -106,6 +145,7 @@ const ActivityBar: React.FC<ActivityBarProps> = ({
       </button>
     </div>
   </nav>
-);
+  );
+};
 
 export default ActivityBar;
