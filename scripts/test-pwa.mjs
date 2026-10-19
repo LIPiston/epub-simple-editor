@@ -374,7 +374,68 @@ record(
   JSON.stringify(installFlow, null, 2),
 );
 
-// ─── 7. 更新提示 ─────────────────────────────────────────────────────────// 模拟「发布了新版本」：改写 sw.js 的字节（浏览器据此判定 SW 有更新）。
+// ─── 6b. 手机上安装入口必须开箱可见 ──────────────────────────────────────
+// 活动栏在窄屏是左抽屉的一部分，默认推到屏幕外（x 为负）。安装入口若只放那里，
+// 用户想装应用得先点汉堡菜单才找得到 —— 这与「可安装」的初衷相悖，
+// 因此窄屏另有一个常驻在顶栏的入口。这里用真实手机视口断言它可见可点。
+const phone = await context.newPage();
+await phone.setViewportSize({ width: 390, height: 844 });
+await phone.goto(APP_URL);
+await phone.waitForSelector('text=书籍管理', { timeout: 30000 });
+await phone.waitForTimeout(500);
+
+await phone.evaluate(() => {
+  // 合成一次安装事件：headless Chromium 不保证真的派发
+  window.__prompted = false;
+  const event = new Event('beforeinstallprompt');
+  event.prompt = async () => { window.__prompted = true; };
+  event.userChoice = Promise.resolve({ outcome: 'dismissed' });
+  window.dispatchEvent(event);
+});
+await phone.waitForTimeout(200);
+
+const mobileInstall = await phone.evaluate(() => {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const buttons = Array.from(document.querySelectorAll('[data-pwa-install="true"]')).map((el) => {
+    const r = el.getBoundingClientRect();
+    return {
+      x: Math.round(r.x),
+      y: Math.round(r.y),
+      width: Math.round(r.width),
+      height: Math.round(r.height),
+      // 完全落在视口内，才算真的能点到
+      visible: r.x >= 0 && r.y >= 0 && r.x + r.width <= viewportWidth && r.y + r.height <= viewportHeight,
+    };
+  });
+  return {
+    viewportWidth,
+    viewportHeight,
+    buttons,
+    visibleCount: buttons.filter((b) => b.visible).length,
+  };
+});
+
+record(
+  '手机视口下安装入口默认就在屏幕内（不必先开抽屉）',
+  mobileInstall.visibleCount >= 1,
+  JSON.stringify(mobileInstall, null, 2),
+);
+
+// 用视口内的那一个：Playwright 的 :visible 只判断有没有尺寸，
+// 抽屉里推到屏幕外的那个也会命中，所以这里按坐标点。
+const inView = mobileInstall.buttons.find((b) => b.visible);
+if (inView) {
+  await phone.mouse.click(inView.x + inView.width / 2, inView.y + inView.height / 2);
+  await phone.waitForTimeout(200);
+  const mobilePrompted = await phone.evaluate(() => window.__prompted);
+  record('手机上点击该入口会触发安装弹窗', mobilePrompted === true);
+}
+
+await phone.close();
+
+// ─── 7. 更新提示 ─────────────────────────────────────────────────────────
+// 模拟「发布了新版本」：改写 sw.js 的字节（浏览器据此判定 SW 有更新）。
 // 新 SW 的预缓存清单没变，会停在 waiting，正好走本应用的「提示后刷新」路径。
 await appendFile(path.join(SERVED, 'sw.js'), '\n// pwa-test-bump\n');
 

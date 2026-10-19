@@ -16,6 +16,7 @@ import { useDrawerGestures } from './hooks/useDrawerGestures';
 import GlobalDialogs from './components/ui/GlobalDialogs';
 import TooltipLayer from './components/ui/TooltipLayer';
 import { OfflineBanner, UpdatePrompt } from './components/ui/PwaBanners';
+import InstallButton from './components/ui/InstallButton';
 import { DEFAULT_VIEW, getGroup, findGroupIdForView } from './components/layout/navConfig';
 
 interface EditorFocusRequest {
@@ -379,24 +380,31 @@ const App: React.FC = () => {
             </span>
           </div>
 
-          {/* 大纲入口：只在编辑章节时出现，其余视图没有大纲可看 */}
-          {outlineAvailable && (
-            <button
-              onClick={toggleMobileOutline}
-              data-outline-toggle="true"
-              data-active={outlineOpen ? 'true' : 'false'}
-              title={outlineOpen ? '关闭大纲' : '打开章节大纲'}
-              aria-label={outlineOpen ? '关闭大纲' : '打开章节大纲'}
-              aria-expanded={outlineOpen}
-              className={`p-2 -mr-1 flex-none rounded-md transition-colors ${
-                outlineOpen
-                  ? 'text-orange-600 bg-orange-50 dark:text-gray-200 dark:bg-gray-800'
-                  : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
-              }`}
-            >
-              <ListTree size={20} />
-            </button>
-          )}
+          {/* 右侧：安装入口 + 大纲入口。
+              安装放这里而不是只放在左抽屉里 —— 手机上活动栏默认在屏幕外，
+              用户要装应用却得先点汉堡菜单才找得到，等于藏起来了。 */}
+          <div className="flex items-center flex-none">
+            <InstallButton className="p-2 -mr-1 text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-gray-800" size={20} />
+
+            {/* 大纲入口：只在编辑章节时出现，其余视图没有大纲可看 */}
+            {outlineAvailable && (
+              <button
+                onClick={toggleMobileOutline}
+                data-outline-toggle="true"
+                data-active={outlineOpen ? 'true' : 'false'}
+                title={outlineOpen ? '关闭大纲' : '打开章节大纲'}
+                aria-label={outlineOpen ? '关闭大纲' : '打开章节大纲'}
+                aria-expanded={outlineOpen}
+                className={`p-2 -mr-1 flex-none rounded-md transition-colors ${
+                  outlineOpen
+                    ? 'text-orange-600 bg-orange-50 dark:text-gray-200 dark:bg-gray-800'
+                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
+                }`}
+              >
+                <ListTree size={20} />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* 离线标记：放在顶栏之下，避免压住刘海屏的安全区（顶栏自己带 pad-safe-top） */}
