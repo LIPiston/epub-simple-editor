@@ -75,6 +75,24 @@
 - 悬浮提示为自绘层（跟随主题配色），替代系统绘制的原生 `title` 提示 —— 后者在深色模式下
   会渲染成看不清的纯黑框。
 
+### 📲 安装到桌面 / 离线使用（PWA）
+- **可以装**：Chromium 系浏览器满足安装条件后，活动栏左下角会出现「安装到桌面」按钮；
+  iOS Safari 没有安装事件，点同一个按钮会提示「分享 → 添加到主屏幕」。
+  装好后从桌面 / 主屏幕图标打开是独立窗口，没有地址栏。
+- **能离线**：书稿本来就存在本机 IndexedDB，加上外壳（HTML / JS / CSS / 图标）
+  全部进 Service Worker 预缓存，断网、飞行模式下照样打开继续写。
+  断网时内容区顶部会出现一条说明性提示，恢复网络后自动消失。
+- **更新由你决定**：新版本下载完成时，底部出现「新版本已就绪 / 更新」提示条。
+  之所以不自动刷新，是因为自动刷新会丢掉最多 2 秒尚未落盘的输入；点「更新」才切到新版本，
+  点「稍后」可以关掉，下次进入还会再提示。
+- Service Worker 只在 `localhost` 或 HTTPS 的生产构建里注册；开发服务器不注册，
+  避免调试时被旧缓存干扰。验证离线行为请用 `npm run build` + `npm run preview`。
+
+### 🎨 样式构建
+- Tailwind 由构建期编译（`tailwind.config.cjs` + `index.css`），不再从 CDN 拉取运行时脚本。
+  这既是离线不掉样式的前提，也省掉一次外部请求。主题变量、安全区、深色纸张覆盖等
+  需要在首屏同步生效的规则仍然写在 `index.html` 的 `<style>` 里。
+
 ---
 
 ## 🚀 技术栈
@@ -82,6 +100,8 @@
 - **核心框架**: [React 18](https://react.dev/)
 - **开发语言**: [TypeScript](https://www.typescriptlang.org/)
 - **构建工具**: [Vite 6](https://vitejs.dev/)
+- **样式**: [Tailwind CSS 3](https://tailwindcss.com/)（构建期编译，不走 CDN）
+- **PWA**: [vite-plugin-pwa](https://vite-pwa-org.netlify.app/)（Workbox 预缓存 + Web App Manifest）
 - **核心组件**:
   - **TipTap**: 富文本编辑器。
   - **JSZip**: 处理 EPUB 容器生成。
@@ -128,7 +148,12 @@ npm run test:editor     # 点击页边距时的光标定位
 npm run test:roundtrip  # 导出产物可被重新导入
 npm run test:sync       # 云同步：WebDAV/S3 全流程、双向冲突、不误删、仅手动（起真实本地服务端）
 npm run test:sync-crypto # 云同步纯逻辑：SigV4 签名对齐 AWS 官方向量、同步计划判定（无需浏览器）
+npm run test:pwa        # PWA：manifest 可安装、SW 预缓存、断网重载可用、安装入口、更新提示
 ```
+
+`test:pwa` 会先构建再起一个静态服务器，用 Chromium 加载 `dist/` 的产物：
+它验证的是「发布出去的这一份」能装、能离线开、能提示更新，而不是源码里有某行代码。
+其中「断网后强制刷新仍能启动」是离线能力的直接证据。
 
 `test:sync` 会起一个真实的本地 HTTP 服务模拟 WebDAV 与 S3。其中 S3 那一侧会
 **在服务端独立重算 SigV4 并校验签名**，不匹配即返回 403 —— 这是浏览器端 WebCrypto
