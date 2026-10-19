@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!--
+    Maskable 版本：Android 会把图标裁成圆形/圆角矩形，安全区只有中间 80%。
+    因此底色铺满整块画布（不做圆角），书形整体缩到约 60% 居中，
+    确保被裁掉四周后仍完整可辨。
+  -->
+  <rect width="512" height="512" fill="#ea580c" />
+  <path d="M256 190c-20-14-46-22-74-22-11 0-21 1-30 4v154c9-2 19-4 30-4 28 0 54 8 74 22V190z"
+        fill="#ffffff" opacity="0.96" />
+  <path d="M256 190c20-14 46-22 74-22 11 0 21 1 30 4v154c-9-2-19-4-30-4-28 0-54 8-74 22V190z"
+        fill="#ffffff" opacity="0.86" />
+  <path d="M256 190v154" stroke="#ea580c" stroke-width="8" stroke-linecap="round" opacity="0.45" />
+  <g stroke="#ea580c" stroke-width="11" stroke-linecap="round" opacity="0.35">
+    <path d="M180 240h48" />
+    <path d="M180 274h48" />
+    <path d="M284 240h48" />
+    <path d="M284 274h48" />
+  </g>
+</svg>

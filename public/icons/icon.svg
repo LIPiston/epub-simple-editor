@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="EPUB Simple Editor">
+  <!--
+    应用图标：橙色底 + 一本翻开的书。
+    与界面主色（orange-500 / orange-600）一致；几何居中，留出 10% 边距，
+    缩成 16px 的 favicon 时仍能看出「书」的轮廓。
+  -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fb923c" />
+      <stop offset="1" stop-color="#ea580c" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)" />
+  <!-- 书页：左右两片，中间留出书脊 -->
+  <path d="M256 168c-28-20-64-30-104-30-16 0-30 2-42 5v214c12-3 26-5 42-5 40 0 76 10 104 30V168z"
+        fill="#ffffff" opacity="0.96" />
+  <path d="M256 168c28-20 64-30 104-30 16 0 30 2 42 5v214c-12-3-26-5-42-5-40 0-76 10-104 30V168z"
+        fill="#ffffff" opacity="0.86" />
+  <!-- 书脊 -->
+  <path d="M256 168v214" stroke="#ea580c" stroke-width="10" stroke-linecap="round" opacity="0.45" />
+  <!-- 文字行：暗示「书稿」 -->
+  <g stroke="#ea580c" stroke-width="14" stroke-linecap="round" opacity="0.35">
+    <path d="M150 236h66" />
+    <path d="M150 282h66" />
+    <path d="M296 236h66" />
+    <path d="M296 282h66" />
+  </g>
+</svg>
